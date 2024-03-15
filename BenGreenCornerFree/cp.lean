@@ -1,4 +1,3 @@
-/- import Mathlib.Tactic -/
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 
@@ -92,7 +91,3 @@ lemma aux (c : ℝ) (hc : 1 ≤ c) :
     ∃ f : ℕ → ℝ, f =o[atTop] (1 : ℕ → ℝ) ∧ (∀ d, 1 ≤ d → c ^ d + 1 = (c + f d) ^ d) := by
   obtain ⟨f, hf⟩ := aux_part1 c hc
   use f, aux_part2 c hc f hf, hf.right
-
-
-example (d : ℕ) (hd : 0 < d) : (d : ℝ) ≠ 0 := by
-  exact pos_iff_ne_zero.mp (Nat.cast_pos.mpr hd)
