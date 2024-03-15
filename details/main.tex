@@ -1,0 +1,110 @@
+\documentclass{article}[11px]
+\usepackage{template}
+
+\begin{document}
+
+\tableofcontents
+
+\section{Construction}
+
+\pagebreak
+
+\section{Asymptotics}
+
+We fix a large \(d\), and set \(q \coloneqq \lfloor(2 / \sqrt{3})^d\rfloor\) and \(N \coloneqq q^d\). Then,
+
+\[
+  \#A_r \geq N^2 (dq^2)^{-1} \left(\frac{3}{4} + O\left(\frac{1}{q}\right)\right)^d
+\]
+
+Writing \(o(1)\) for a quantity tending to \(0\) as \(N \to \infty\), we note that \(q = \left(\frac{2}{\sqrt{3}} + o(1)\right)^d\) ...
+
+\begin{theorem}{\ok (March 6th)}{}
+We have \(q = (2 / \sqrt{3})^d + O(1) = \ldots\), see~\ref{sec:asymptotics1}
+\end{theorem}
+
+and that \(d = (1 + o(1))\sqrt{\frac{\log N}{\log(2 / \sqrt{3})}}\).
+
+\begin{todo}{}{}
+What the fuck?
+\end{todo}
+
+\begin{theorem}{Derivation}{}
+  From \(N = q^d\) we know \(d = \frac{\log N}{\log q} = \ldots\), see~\ref{sec:asymptotics2}
+\end{theorem}
+
+\pagebreak
+
+\section{Asymptotics 1}\label{sec:asymptotics1}
+
+Fix \(c \geq 1\). We want to say that \(c^d + 1 = (c + o(1))^d\). In Lean, we may write this as:
+
+\begin{theorem}{Lean Formulation 1}{}\label{thm:3.1}
+There exists \(f : \N \to \R\) such that \(f = o(1)\), and \(c^d + 1 = (c + f(d))^d\) for all \(d \in \N\).
+\end{theorem}
+
+However, this is already wrong, since when \(d = 0\) the relation cannot be satisfied. Hence, we have to modify the statement slightly.
+
+\begin{theorem}{Lean Formulation 2}{}
+There exists \(f : \N \to \R\) such that \(f = o(1)\), and \(c^d + 1 = (c + f(d))^d\) for all \(d \in \N_{> 0}\).
+\end{theorem}
+
+Let us try to prove the theorem \textit{without} using the explicit form of the solution. We can make the observation that the ``correct solution'' satisfies \(f(d) \leq \frac{1}{d}\), as \(c^d + 1 \leq \left(c + \frac{1}{d}\right)^d\), from which \(f = o(1)\) follows easily. Hence, in some sense \(f = o(1)\) is ``easy''. This inspires our first attempt:
+
+\begin{theorem}{Attempt 1}{}
+The following hold:
+\begin{enumerate}[(1)]
+  \item There exists a function \(f : \N \to \R\) such that \(c^d + 1 = (c + f(d))^d\) for all \(d\).
+  \item For \textit{all} functions \(f : \N \to \R\) such that \(c^d + 1 = (c + f(d))^d\) for all \(d\), \(f = o(1)\).
+\end{enumerate}
+\end{theorem}
+
+However, (2) turns out to be false, as when \(d\) is even, we can take \(c + f(d)\) to be the negative of that for the ``correct solution'', meaning \(f(d)\) does not tend to \(0\). Here is the fixed version:
+
+\begin{theorem}{\ok Attempt 2}{}
+The following hold:
+\begin{enumerate}[(1)]
+  \item There exists a function \(f : \N \to \R\) where \(f(d) \geq 0\) and \(c^d + 1 = (c + f(d))^d\).
+  \item For \textit{all} functions \(f : \N \to \R\) such that \(f(d) \geq 0\) and \(c^d + 1 = (c + f(d))^d\), \(f = o(1)\).
+\end{enumerate}
+\end{theorem}
+
+For (1), the approach we take here is to use the continuity of \(x \mapsto x^d\) and the fact that \(c^d \leq c^d + 1 \leq (c + 1)^d\), the latter of which can be proven by noting \(c^d + 1 \leq c^d + d \leq (c + 1)^d\). For (2), note that \((c + f(d))^d = c^d + 1 \leq \left(c + \frac{1}{d}\right)^d\), so \(f(d) \leq \frac{1}{d}\). This combined with \(f(d) \geq 0\) shows \(f = o(1)\).
+
+The final formalisation can be found \href{https://gist.github.com/grhkm21/cc839b7d3c0f0d29a1b8c84e4ba8347b}{here}.
+
+\pagebreak
+
+\section{Asymptotics 2}\label{sec:asymptotics2}
+
+Let \(c > 1\) be a constant. We want to show that \(\sqrt{\frac{\log N}{\log(c + o(1))}} = (1 + o(1))\sqrt{\frac{\log N}{\log c}}\) as \(N \to \infty\).
+
+\begin{theorem}{Attempt 1}{}
+  \(\log(c + o(1)) = \log(c) + \log(1 + o(1))\).
+\end{theorem}
+
+Simply write \(\log(c + o(1)) = \log(c) + \log(1 + o(1) / c) = \log(c) + \log(1 + o(1))\).
+
+At this point, I realised that my formulation was slightly wrong again. Recalled from the last section that there was a problem with \ref{thm:3.1}, as the statement was not satisfiable at \(d = 0\). Here, for the equality \(\log(xy) = \log(x) + \log(y)\) hold (or to be nicely defined), we need \(0 < x\) and \(0 < y\) too.
+
+Hence, if we phrase the theorem in the typical Lean way of \(\forall f \in o(1), \exists g, g \in o(1) \land \log(c + f(N)) = \log(c) + \log(1 + g(N))\), then this might not be satisfable, since \(f\) can be negative at the beginning. The correct formulation is
+
+\begin{theorem}{Step 1}{}
+  \(\forall f \in o(1), \exists g, g \in o(1) \land \log(c + f(N)) =^f \log(c) + \log(1 + g(N))\).
+\end{theorem}
+
+From which we can argue that since \(f \in o(1)\), we get \(f \to 0\), so \(1 + f / c \to 1\) i.e. it is eventually positive.
+
+\begin{theorem}{Step 2}{}
+  \(\log(1 + o(1)) = o(1)\).
+\end{theorem}
+
+From the elementary inequality \(1 + x \leq \exp(x)\) we get \(\log(1 + x) \leq x = O(x)\) when \(x\) is large enough (non-negative). Hence, \(\log(1 + o(1)) = O(o(1)) = o(1)\).
+
+\begin{theorem}{Step 3}{}
+  \(\sqrt{\frac{1}{1 + o(1)}} = 1 + o(1)\).
+\end{theorem}
+
+To show this, we simply recall that \(f(x) \in o(1) \iff \lim_{x \to \infty} f(x) = 0\). Let \(f(n)\) be a function such that \(\lim_{n \to \infty} f(n) = 0\). Then, we can immediate get \(\sqrt{\frac{1}{1 + f(x)}} \to 1\) by substitution.
+
+\end{document}
