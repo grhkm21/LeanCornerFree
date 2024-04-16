@@ -16,7 +16,7 @@ lemma pow_add_mul_self_le_pow_one_add
     a ^ c + c * b ≤ (a + b) ^ c := by
   by_cases hc : 0 < c
   · have ha' := lt_of_lt_of_le zero_lt_one ha
-    rw [show a + b = a * (1 + b / a) by rw [mul_add, mul_one, mul_div_cancel' b (by linarith)],
+    rw [show a + b = a * (1 + b / a) by rw [mul_add, mul_one, mul_div_cancel₀ b (by linarith)],
       mul_pow]
     refine le_trans ?_ ?_ (b := a ^ c * (1 + c * (b / a)))
     · rw [mul_add, mul_one, ←mul_one (c * b), mul_div, mul_div, mul_comm (a ^ c), ←mul_div]
@@ -56,7 +56,7 @@ lemma aux_part1 (c : ℝ) (hc : 1 ≤ c) :
   · rw [ge_iff_le, sub_nonneg]
     exact (mem_Icc.mp hf₁).left
   · beta_reduce at hf₂
-    rw [←add_sub_assoc, add_sub_cancel', hf₂]
+    rw [←add_sub_assoc, add_sub_cancel_left, hf₂]
 
 lemma aux_part2 (c : ℝ) (hc : 1 ≤ c) :
     ∀ f : ℕ → ℝ, (0 ≤ f ∧ ∀ d, 1 ≤ d → c ^ d + 1 = (c + f d) ^ d) → (f =o[atTop] (1 : ℕ → ℝ)) := by

@@ -19,18 +19,24 @@ We fix a large \(d\), and set \(q \coloneqq \lfloor(2 / \sqrt{3})^d\rfloor\) and
 
 Writing \(o(1)\) for a quantity tending to \(0\) as \(N \to \infty\), we note that \(q = \left(\frac{2}{\sqrt{3}} + o(1)\right)^d\) ...
 
-\begin{theorem}{\ok (March 6th)}{}
+\begin{theorem}{\ok (March 6)}{}
 We have \(q = (2 / \sqrt{3})^d + O(1) = \ldots\), see~\ref{sec:asymptotics1}
 \end{theorem}
 
 and that \(d = (1 + o(1))\sqrt{\frac{\log N}{\log(2 / \sqrt{3})}}\).
 
-\begin{todo}{}{}
-What the fuck?
-\end{todo}
-
-\begin{theorem}{Derivation}{}
+\begin{theorem}{\ok (March 14)}{}
   From \(N = q^d\) we know \(d = \frac{\log N}{\log q} = \ldots\), see~\ref{sec:asymptotics2}
+\end{theorem}
+
+A short calculation then confirms that \(\#A_r \geq N^2 2^{-(c + o(1))\sqrt{\log_2 N}}\), where \(c = 2\sqrt{2 \log_2\left(\frac{4}{3}\right)} \approx 1.822\ldots\).
+
+% \begin{todo}{}{}
+%   Take a deep breath!
+% \end{todo}
+
+\begin{theorem}{}{}
+  See~\ref{sec:asymptotics3}
 \end{theorem}
 
 \pagebreak
@@ -89,22 +95,28 @@ At this point, I realised that my formulation was slightly wrong again. Recalled
 
 Hence, if we phrase the theorem in the typical Lean way of \(\forall f \in o(1), \exists g, g \in o(1) \land \log(c + f(N)) = \log(c) + \log(1 + g(N))\), then this might not be satisfable, since \(f\) can be negative at the beginning. The correct formulation is
 
-\begin{theorem}{Step 1}{}
+\begin{theorem}{\ok Step 1 (Mar 11)}{}
   \(\forall f \in o(1), \exists g, g \in o(1) \land \log(c + f(N)) =^f \log(c) + \log(1 + g(N))\).
 \end{theorem}
 
 From which we can argue that since \(f \in o(1)\), we get \(f \to 0\), so \(1 + f / c \to 1\) i.e. it is eventually positive.
 
-\begin{theorem}{Step 2}{}
+\begin{theorem}{\ok Step 2 (Mar 14)}{}
   \(\log(1 + o(1)) = o(1)\).
 \end{theorem}
 
 From the elementary inequality \(1 + x \leq \exp(x)\) we get \(\log(1 + x) \leq x = O(x)\) when \(x\) is large enough (non-negative). Hence, \(\log(1 + o(1)) = O(o(1)) = o(1)\).
 
-\begin{theorem}{Step 3}{}
+\begin{theorem}{\ok Step 3 (Mar 14)}{}
   \(\sqrt{\frac{1}{1 + o(1)}} = 1 + o(1)\).
 \end{theorem}
 
 To show this, we simply recall that \(f(x) \in o(1) \iff \lim_{x \to \infty} f(x) = 0\). Let \(f(n)\) be a function such that \(\lim_{n \to \infty} f(n) = 0\). Then, we can immediate get \(\sqrt{\frac{1}{1 + f(x)}} \to 1\) by substitution.
+
+\pagebreak
+
+\section{Asymptotics 3}\label{sec:asymptotics3}
+
+
 
 \end{document}

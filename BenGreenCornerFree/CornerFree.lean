@@ -71,7 +71,7 @@ by
       exact h
     · intro h xy xy' x'y hx hy hd
       specialize h (x'y.val.1 / xy.val.1) xy xy' x'y hx hy
-      simp_rw [mul_div, mul_comm, hd, mul_comm xy.val.1, mul_div_cancel''] at h
+      simp_rw [mul_div, mul_comm, hd, mul_comm xy.val.1, mul_div_cancel_right] at h
       simp only [forall_true_left] at h
       exact (div_eq_one.mp h).symm
   · -- Prove the new new Prop is decidable
@@ -88,12 +88,3 @@ noncomputable def mulCornerFreeNumber (s : Finset (α × α)) : ℕ :=
   Nat.findGreatest (fun m => ∃ (t : _) (_ : t ⊆ s), t.card = m ∧ MulCornerFree (t : Set (α × α))) s.card
 
 end BenGreen
-
-section asdf
-
-variable {α : Type*}
-
-def MyProp (s : Finset α) : Prop := ∀ a : α, a ∈ s
-
-end asdf
-

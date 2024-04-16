@@ -22,7 +22,7 @@ lemma aux1 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
     /- Then we can write log(c + f N) = log(c) + log(1 + f N / c) -/
     rw [EventuallyEq, eventually_atTop]
     use N, fun x hx ↦ ?_
-    rw [← log_mul (by linarith), mul_add, mul_div_cancel' _ (by linarith), mul_one]
+    rw [← log_mul (by linarith), mul_add, mul_div_cancel₀ _ (by linarith), mul_one]
     have : -1 < -1 / c := by
       rwa [neg_div, neg_lt_neg_iff, div_lt_iff $ zero_lt_one.trans hc, one_mul]
     have : -1 / c < f x / c := (div_lt_div_right $ zero_lt_one.trans hc).mpr (hN x hx).left
@@ -48,7 +48,7 @@ lemma aux3 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
   · rw [EventuallyEq, eventually_atTop] at hg' ⊢
     obtain ⟨N, hN⟩ := hg'
     use max N 1, fun b hb ↦ ?_
-    rw [mul_comm, ← sqrt_mul, mul_one_div, div_div, mul_add, mul_one, mul_div_cancel']
+    rw [mul_comm, ← sqrt_mul, mul_one_div, div_div, mul_add, mul_one, mul_div_cancel₀]
     · exact hN b (le_of_max_le_left hb)
     · apply log_eq_zero.not.mpr
       push_neg
@@ -69,7 +69,7 @@ lemma aux4 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
   use fun N ↦ sqrt (1 / (1 + g N)) - 1, ?_
   · rw [EventuallyEq, eventually_atTop] at hg' ⊢
     obtain ⟨N, hN⟩ := hg'
-    simp_rw [add_sub_cancel'_right]
+    simp_rw [add_sub_cancel]
     exact ⟨N, hN⟩
   · rw [isLittleO_one_iff] at hg ⊢
     simpa using ((hg.const_add 1).inv₀ (by linarith)).sqrt.sub_const 1

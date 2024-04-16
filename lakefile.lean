@@ -3,6 +3,7 @@ open Lake DSL
 
 package «BenGreenCornerFree» where
   -- add package configuration options here
+  moreServerOptions := #[⟨`autoImplicit, false⟩]
 
 lean_lib «BenGreenCornerFree» where
   -- add library configuration options here
