@@ -1,0 +1,35 @@
+\section{Lean for the Working Mathematician \protect\footnote{Mac Lane would be proud.}}
+
+Formally, Lean is an interactive theorem prover based on a Martin-Löf (dependent) Type Theory (MLTT)~\cite{MartinLöf1984}. This section aims to give a short introduction to the theory and how it works as the theory underlying a theorem prover. For an in-depth exposition of the theory, the reader is advised to consult~\cite{Rijke2022}.
+
+\subsection{Dependent Type Theory}
+\todo{\ok Introduce basics of dependent type theory, and compare it with set theory (e.g. instead of \(x \in X\), we have \(x : X\)).}
+
+This is a summary of type theory, from the perspective of a practitioner. \footnote{I am omitting many details, such as universes, contexts, equality types etc. for brevity.}
+
+\begin{gtheorem*}
+  \textbf{Type theory} aims to be an alternative foundation for Mathematics, in place of the traditional set theory. It consists of \textit{elements} and \textit{types}, along with a set of \textit{inference rules} which corresponds to axioms from logic and set theory.
+\end{gtheorem*}
+
+Examples of \textit{elements} include the integer \(3\), the propositions ``\(P \coloneqq 1 = 2\)'', ``\(Q \coloneqq \forall x \in \Z, 2x \in \mathrm{Even}\)'', the sets \(\Q\) and \(\{2, 3, 5\}\). These each have a type. For example, \(3\) belongs to the type \(\mathbf{Nat}\), the type of natural numbers, and we denote this by a \textit{judgement} \(\goal 3 : \mathbf{Nat}\) (the \(\goal\) indicates the start of a judgement, and I will omit it when it is clear). There is also a type for all nice\footnote{First-order logical propositions should suffice.} propositions called \textbf{Prop}, and we may write \(P, Q : \mathbf{Prop}\). The types of \(\Q\) and \(\{2, 3, 5\}\) can be \textbf{NumberField} and \textbf{Set} \(\Z\), which are the types for number fields and sets of integers respectively.
+
+\textit{Everything} in type theory has a type. In particular, there is a type of all ``normal types''\footnote{This is not standard terminology, but rather to distinguish the types above from \(\mathbf{Type}_1\) or further types.} (e.g. \textbf{Nat}, \textbf{Set} \(\Z\) and \textbf{Prop}), which we denote by \textbf{Type} or \(\mathbf{Type}_1\). For example, the judgements \(\mathbf{Nat} : \mathbf{Type}\) and \(\mathbf{Prop} : \mathbf{Type}\) are valid. From this, we see that there is an infinite number of judgements \(\mathbf{Type}_i : \mathbf{Type}_{i + 1}\), for all \(i \geq 1\). For us and for most cases, higher types (\(\mathbf{Type}_i\) for \(i \geq 2\)) are not required, so we will be ignoring them.
+
+An important class of elements is the functions. \todo{add some stuff here. I want the notation \(T_1 \to T_2\).}
+
+As the reader might have noticed, we have not done anything truly innovative. In fact, all concepts above naturally correspond to concepts from set theory. Types can be thought of as a collection of things, just like sets, and \(x : X\) can be thought of as alternative notation for \(x \in X\).
+
+We now turn to the \textit{inference rules}, which are axioms within the type theory that determine how elements and types interact. Here is an inference rule that represents type substitution:
+
+\[
+  \infer{\goal t : T_2}{\goal t : T_1 & \goal h : T_1 = T_2}
+\]
+
+The inference rule is expressed in Gentzen's notation \cite{Gentzen1935a}, \cite{Gentzen1935b}. The ``input'' judgements (also called \textit{hypotheses}) are above the line and the ``output'' judgement is below the line, and the rule as a whole states that given the hypotheses (in a context), one can create the output judgement. In informal English, this is saying is that ``given an element \(t\) of type \(T_1\) and an element \(h\) of type \(T_1 = T_2\), we can produce an element of type \(T_2\)''. In set theory, this translates to the tautology ``if \(x \in X\) and \(X = Y\), then \(x \in Y\)'', which is true as sets are determined by their elements.
+
+\subsection{DTT and Maths}
+\todo{Mention the relation of DTT with Math, that formalising a proof corresponds to creating a term with the correct type.}
+
+\subsection{Mathlib}
+\todo{Connect Lean with Mathlib: as demonstrated above, there is a strong relation betwen Mathematical proofs and typed expressions.}
+

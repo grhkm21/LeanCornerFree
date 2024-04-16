@@ -1,0 +1,15 @@
+\section{Limits in Lean}
+
+We follow the presentations of~\cite{HIH2013} and~\cite{BCM2020}.
+
+\subsection{Filters}
+
+\todo{Introduce the mathematical background for filters, how they replace the traditional limits, and give some examples.}
+
+In first year of undergraduate, we have all seen different flavours of limits. For sequences we have \(\lim_{n \to \infty} a_n\), while for functions we have \(\lim_{x \to x_0} f(x)\). Beyond these two, there are a lot more variants: \(\lim_{x \to x_0^+} f(x)\), \(\lim_{x \to x_0 \\ x \neq x_0} f(x)\), \(\lim_{x \to +\infty} f(x)\) and several other negative counterparts. Intuitively they are all the same concept, but rigorously they have slightly different definitions: for a regular limit one writes \(\forall \varepsilon > 0, \exists \delta > 0, (\forall x, |x - x_0| < \delta \implies \cdots)\), while for limits at infinity one writes \(\forall \varepsilon > 0, \exists X > 0, (\forall x \geq X, \cdots)\). The problem is even worse when one takes into account what the limiting value is. For example, even the definitions of \(\lim_{x \to x_0} f(x) = 3\) and \(\lim_{x \to x_0} f(x) = +\infty\) differ.
+
+\textit{Filters} are introduced by Henri Cartan ~\cite{Cartan1937a}, ~\cite{Cartan1937b} in order to unify the different notions of limits in topology. 
+
+\subsection{Lean 101: Proving a Limit}
+\todo{Walkthrough the formalisation of the proof of \(\lim_{x \to \infty} \frac{1}{1 + x} = 0\), since this basically comes up later on.}
+
