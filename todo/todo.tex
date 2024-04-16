@@ -1,0 +1,60 @@
+\documentclass{article}
+
+\usepackage{template}
+
+\title{TODO List}
+\author{Gareth Ma}
+
+\begin{document} \maketitle
+
+Not sure why I need to make a TODO list in \LaTeX but here I am. \ok means ok, no \ok means no ok.
+
+The Lean part is split into three sections, the ABC: Asymptotics, Bridge and Construction.
+
+Lean Construction:
+
+\begin{enumerate}
+\item \ok Definition of \texttt{CornerFree}
+\item \ok Definition of construction (\texttt{IsInCons} and \(A_r\))
+\item \ok Computable definitions
+\item \ok Prove base case of induction (\((x + d)_0 + y_0 = x_0 + (y + d)_0\))
+\item Prove inductive case of induction (\((x + d)_i + y_i = x_i + (y + d)_i\))
+\item \ok Conclude lemma 0.2 (\(\pi(x + d) + \pi(y) = \pi(x) + \pi(y + d)\)).
+\item Combine lemma 0.1 with parallelogram law to get \(b = 0\).
+\item \ok Conclude that \(A_r\) is corner-free.
+\end{enumerate}
+
+Lean Asymptotics:
+
+\begin{enumerate}
+\item \ok Prove asymptotics 1 (\(q = (c + o(1))^d\).)
+\item \ok Prove asymptotics 2 (\(d = (1 + o(1))\sqrt{\cdots}\).)
+\item Prove the ``short calculation''.
+\end{enumerate}
+
+Lean Bridge:
+
+\begin{enumerate}
+\item Show that there are \((\frac{3}{4}q^2 + O(q))^d\) pairs of \((x, y)\) with \(\frac{q}{2} \leq x_i + y_i < \frac{3q}{2}\).
+\item Apply pigeonhole principle to get \(\#A_r \geq (dq^2)^{-1}(\frac{3}{4}q^2 + O(q))^d\) (PP on the norm).
+\end{enumerate}
+
+\pagebreak
+
+Essay:
+
+\begin{enumerate}
+\item \texttt{sec1-intro}
+\item \ok \texttt{sec2-background}
+\item \ok \texttt{sec3-lean-and-mathlib}
+\item \ok \texttt{sec4-limits}
+\item \texttt{sec5-proof-breakdown}
+\item \texttt{sec6-impl-construction}
+\item \texttt{sec7-impl-asymptotics}
+\item \texttt{sec8-impl-bridge}
+\item \texttt{sec9-correctness}
+\item \texttt{sec10-conclusion}
+\item \ok \texttt{sec11-acknowledgement}
+\end{enumerate}
+
+\end{document}
