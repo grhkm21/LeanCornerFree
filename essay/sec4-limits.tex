@@ -8,7 +8,66 @@ We follow the presentations of~\cite{HIH2013} and~\cite{BCM2020}.
 
 In first year of undergraduate, we have all seen different flavours of limits. For sequences we have \(\lim_{n \to \infty} a_n\), while for functions we have \(\lim_{x \to x_0} f(x)\). Beyond these two, there are a lot more variants: \(\lim_{x \to x_0^+} f(x)\), \(\lim_{x \to x_0 \\ x \neq x_0} f(x)\), \(\lim_{x \to +\infty} f(x)\) and several other negative counterparts. Intuitively they are all the same concept, but rigorously they have slightly different definitions: for a regular limit one writes \(\forall \varepsilon > 0, \exists \delta > 0, (\forall x, |x - x_0| < \delta \implies \cdots)\), while for limits at infinity one writes \(\forall \varepsilon > 0, \exists X > 0, (\forall x \geq X, \cdots)\). The problem is even worse when one takes into account what the limiting value is. For example, even the definitions of \(\lim_{x \to x_0} f(x) = 3\) and \(\lim_{x \to x_0} f(x) = +\infty\) differ.
 
-\textit{Filters} are introduced by Henri Cartan ~\cite{Cartan1937a}, ~\cite{Cartan1937b} in order to unify the different notions of limits in topology.
+\textit{Filters} are introduced by Henri Cartan ~\cite{Cartan1937a}, ~\cite{Cartan1937b} in order to unify the different notions of limits in topology. The idea is that \todo{include some ideas about patches and etc.}
+
+\begin{definition}[Filters~\cite{Massot2020}]
+  A \textbf{filter} on \(X\) is a collection \(\cF\) of subsets of \(X\) such that
+  \begin{enumerate}
+    \item \(X \in \cF\)
+    \item \(U \in \cF \land U \subseteq V \implies V \in \cF\)
+    \item \(U \subseteq \cF \land V \subseteq \cF \implies U \cap V \in F\)
+  \end{enumerate}
+\end{definition}
+
+By definition, a filter \(\cF\) on \(X\) is a subset of \(\mathcal{P}(X)\), so it also corresponds to a function \(\{0, 1\}^X\), which has the usual poset structure of \(S \leq T \iff S \subseteq T\) and a unique maximal element \(X\). Then, requirement 2 translates to that if \(U \in \cF\), then for all elements \(V\) such that \(U \subseteq V\), \(V \in \cF\). If we orient \(\{0, 1\}^X\) such that for \(U \leq V\), the edge \(U \to V\) is going ``up'', then requirement \(2\) says that for all \(U \in \cF\), the subgraph ``above'' \(U\) is also included in \(\cF\). The third requirement is a natural closeness property: \(\cF\) should be closed / stable under finite intersections.
+
+\begin{example}
+  Every topological space \(X\) and every point \(x_0 \in X\) gives rise to a filter \(\cF = \mathcal{N}_{x_0}\) of neighbourhoods of \(x_0\): \(\mathcal{N}_{x_0} \coloneqq \{V \subseteq \mathcal{X} : \exists U \subseteq V \,\, s.t. \,\, U \text{ open} \land x_0 \in U\}\). As we will see, this corresponds to limits \(\lim_{x \to x_0}\).
+\end{example}
+
+\begin{example}
+  The cofinite sets of the space \(X = \N\) also form a filter \(\cF_{\N} = \{\mathcal{A} \subseteq \N : |\mathcal{A}^c| < \infty\}\). This naturally corresponds to limits \(\lim_{n \to \infty}\), or generally statements happening ``eventually''. This also makes sense intuitively, as an ``eventual'' event satisfies the three requirements for a filter.
+\end{example}
+
+\begin{example}
+  Let \(X = \R\). We can consider the filter \(\mathcal{N}_{+\infty}\) \textit{generated} by segments \([A, +\infty) \subset X\) for all \(A \in \R\). That is, \(\mathcal{N}_{+\infty}\) is the smallest filter / intersection of all filters containing all the segments, which is simply the collection of all subsets of \(\mathcal{N}\) containing \([A, +\infty)\) for some \(A \in \R\). This unifies the limits \(\lim_{x \to +\infty}\). The filter \(\mathcal{N}_{-\infty}\) is defined analogously. Looking ahead, the filters \(\mathcal{N}_{+\infty}\) and \(\mathcal{N}_{-\infty}\) are called \mintinline{lean}{atTop} and \mintinline{lean}{atBot} respectively, and will come up very often.
+\end{example}
+
+\todo{Define a partial ordering \(\leq\) on filters of \(X\).}
+
+Now that we have a handful of examples of filters, let us consider how the language of limits translate to language of filters, before giving the proper definition. For example, suppose that \(\lim_{x \to 2} f(x) = 3\) for some \(f : \R \to \R\). The most basic definition we can give is that
+
+\[
+  \forall \varepsilon > 0, \exists \delta > 0, 0 < |x - 2| < \delta \implies |f(x) - 3| < \varepsilon
+\]
+
+Thinking more topologically, we may say that (where \(\mathcal{B}_{\delta}(x_0)\) is the \textit{punctured} open ball of radius \(\delta > 0\) around \(x_0\))
+
+\[
+  \forall \varepsilon > 0, \exists \delta > 0, f\left(\mathcal{B}_{\delta}(2)\right) \subseteq \mathcal{B}_{\varepsilon}(3)
+\]
+
+To unify this even further, we would like to get rid of the quantifiers on \(\varepsilon\) and \(\delta\), of course by using filters. Let us consider the filter \(\cG = \mathcal{N}_3\) which consists of neighbourhoods around \(3\). For every \(S \in \mathcal{N}_3\), there exists an open ball \(\mathcal{B}_{\varepsilon}(3) \subset S\) for some \(\varepsilon > 0\), and we want \(f\left(\mathcal{B}_{\delta}(2)\right) \subseteq S\) for some \(\delta > 0\). Somewhat surprisingly, it can be proven that this is equivalent to \(f(\mathcal{N}_2) \subseteq S\). There is a catch though: \(f(\mathcal{N}_2)\) is not necessarily a filter on \(\R\)! A possible fix is to take the filter closure of \(f(\mathcal{N}_2)\), but a simpler fix is to observe that \(f^{-1}(\mathcal{N}_3)\) is a filter. This also gives us the first Mathematical proof of this essay:
+
+\begin{definition}
+  Let \(X, Y\) be spaces, \(f : X \to Y\) be a function, and \(\cF \subseteq \mathcal{P}(X)\) be a filter on \(Y\). The \textbf{pushforward filter} of \(\cF\) along \(f\), denoted \(f_*\cF\), is defined as \(f_*\cF \coloneqq f^{-1}(\cG) \subseteq \mathcal{P}\).
+\end{definition}
+
+\begin{lemma}
+  The pushforward filter \(f_*\cF\) is indeed a filter.
+\end{lemma}
+
+\begin{proof}
+  \todo{TODO.}
+\end{proof}
+
+The discussion above then motivates the following definition:
+
+\begin{definition}[Limits along filters 1]
+  Let \(X, Y\) be spaces, \(f : X \to Y\) be a function, \(y_0 \in Y\) be a point, and \(\cF \subseteq \mathcal{P}(X)\) be a filter on \(X\). Then, we say that \(f\) \textbf{tends to} \(y_0\) \textbf{along the filter} \(\cF\) if \(f_*\cF \leq \mathcal{N}_Y\).
+\end{definition}
+
+
 
 \subsection{Lean 101: Proving a Limit}
 \todo{Walkthrough the formalisation of the proof of \(\lim_{x \to \infty} \frac{1}{1 + x} = 0\), since this basically comes up later on.}

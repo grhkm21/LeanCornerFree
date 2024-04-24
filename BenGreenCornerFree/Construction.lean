@@ -3,12 +3,12 @@ import Mathlib.Data.List.ToFinsupp
 
 import BenGreenCornerFree.CornerFree
 
-namespace BenGreen
+namespace BenGreen.Construction
 
 open Int Finset BigOperators
 
 /- Make sure this fails because of autoImplicit=false -/
-example : a + 1 = 2 := by sorry
+/- example : a + 1 = 2 := by sorry -/
 
 -- Before anything, let us check out the space ℤ_q^d
 #check Module
@@ -43,7 +43,7 @@ instance : Fintype (Vec' q d) := Fintype.ofEquiv _ VecEquivFun.symm
 def VecTruncate (v : Vec' d q) (d' : Fin d) : Vec' (d - d') q where
   val := fun a ↦ v.val $ (a.addNat d').cast (by omega)
   property := by
-    constructor <;> simp only [Pi.coe_nat, Pi.le_def, Pi.zero_apply]
+    constructor <;> simp only [Pi.natCast_def, Pi.le_def, Pi.zero_apply]
     · exact fun _ ↦ v.prop.left _
     · exact fun _ ↦ v.prop.right _
 
@@ -56,10 +56,44 @@ def VecToInt' (k : Fin d) : Vec' d q ↪ ℤ where
   toFun := fun v ↦ VecToInt (VecTruncate v k)
   inj' := fun v₁ v₂ hv ↦ by sorry
 
+lemma VecToIntZero (v : Vec' 0 q) : VecToInt v = 0 := rfl
+
 lemma VecToInt'Zero (hd : 0 < d) : @VecToInt' d q ⟨0, hd⟩ = VecToInt := by
   ext a
   simp [VecToInt', VecToInt]
   exact sum_congr (by ext a; simp [Fin.le_iff_val_le_val]) (fun _ _ ↦ rfl)
+
+def v₀ : Vec' 3 5 := VecEquivFun.invFun ![2, 4, 1]
+#eval v₀.val ⟨0, by omega⟩
+#eval v₀.val ⟨1, by omega⟩
+#eval v₀.val ⟨2, by omega⟩
+#eval VecToInt' 0 v₀
+#eval VecToInt' 1 v₀
+#eval VecToInt' 2 v₀
+#eval v₀.val 1 + 5 * VecToInt' ⟨2, by omega⟩ v₀
+
+lemma aux1 (v : Vec' d q) (k : Fin d) (hk : 0 < k.val) {h h'} :
+    ∑ x : Fin k, v.val (Fin.cast h (Fin.addNat x (d - k))) * q ^ x.val =
+      v.val k +
+        q * ∑ x : Fin (k - 1), v.val (Fin.cast h' (Fin.addNat x ((d - k) + 1))) * q ^ x.val := by
+  obtain ⟨d', rfl⟩ := Nat.exists_eq_add_of_le' (by omega : 0 < d)
+  cases' Fin.eq_zero_or_eq_succ k with hk' hk'
+  · subst hk'; rw [Fin.val_zero] at hk; omega
+  · obtain ⟨k, rfl⟩ := hk'
+    simp only [Fin.val_succ, Nat.reduceSucc, Pi.natCast_def, Nat.add_succ_sub_one, Nat.add_zero] at *
+    rw [Fin.sum_univ_succ, Fin.val_zero, pow_zero, mul_one]
+    congr 1
+    · sorry
+    · sorry
+
+/- The naming scheme is horrible -/
+lemma VecToInt_eq_first_add_truncate (v : Vec' d q) (k : Fin d) (hk : k.val + 1 < d) :
+    VecToInt' k v = v.val k + q * VecToInt' ⟨_, hk⟩ v := by
+  simp [VecToInt', VecToInt, VecTruncate]
+  have : ∃ k' : Fin d, d - k = k' := by sorry
+  obtain ⟨k', hk'⟩ := this
+  -- rw [aux1 v k']
+  sorry
 
 def VecPairToInt : Vec' d q × Vec' d q ↪ ℤ × ℤ where
   toFun := fun ⟨v₁, v₂⟩ ↦ ⟨VecToInt v₁, VecToInt v₂⟩
@@ -69,36 +103,27 @@ lemma VecPairEquivInterval_eq_iff {u v : Vec' d q} {a b : ℤ} :
     VecPairToInt ⟨u, v⟩ = ⟨a, b⟩ ↔ VecToInt u = a ∧ VecToInt v = b := by
   rw [VecPairToInt, Function.Embedding.coeFn_mk, Prod.mk.injEq]
 
-lemma VecToIntZero (v : Vec' 0 q) : VecToInt v = 0 := rfl
-
-lemma aux {m n d k q : ℕ} (f : Fin d → ℤ) (h h') :
+/- This is necessary since subst doesn't work for expressions or lets -/
+lemma aux2 {m n d k q : ℕ} (f : Fin d → ℤ) (h h') :
     ∑ x : Fin m, f (Fin.cast h (Fin.addNat x k)) * q ^ x.val
     = ∑ x : Fin n, f (Fin.cast h' (Fin.addNat x k)) * q ^ x.val := by
   have : m = n := by omega
   subst this
   rfl
 
-def v₀ : Vec' 3 5 := VecEquivFun.invFun ![2, 4, 1]
-#eval v₀.val ⟨0, by omega⟩
-#eval v₀.val ⟨1, by omega⟩
-#eval v₀.val ⟨2, by omega⟩
-#eval VecToInt' 0 v₀
-#eval VecToInt' 1 v₀
-#eval VecToInt' 2 v₀
-
 lemma VecEqMod (v : Vec' d q) (k : Fin d) :
     v.val k ≡ VecToInt' k v [ZMOD q] := by
-  simp only [VecToInt', Int.modEq_iff_dvd, VecTruncate, VecToInt, Pi.coe_nat,
+  simp only [VecToInt', Int.modEq_iff_dvd, VecTruncate, VecToInt, Pi.natCast_def,
     Function.Embedding.coeFn_mk]
   have : 0 < d - k := have := k.prop; by omega
   obtain ⟨t, ht⟩ := Nat.exists_eq_add_of_le' this
-  rw [aux v.val (by omega) (by omega) (n := t + 1), Fin.sum_univ_succ, add_comm, add_sub_assoc]
+  rw [aux2 v.val (by omega) (by omega) (n := t + 1), Fin.sum_univ_succ, add_comm, add_sub_assoc]
   simp
   apply dvd_add
   · apply dvd_sum
     intro k _
     simp_rw [pow_succ']
-    rw [← mul_assoc]
+    rw [mul_comm (q : ℤ) _, ← mul_assoc]
     apply dvd_mul_left
   · convert dvd_zero _
     have {h} : Fin.cast h (Fin.addNat (0 : Fin (t + 1)) k.val) = k := by ext; simp
@@ -177,7 +202,7 @@ theorem part1 : AddCornerFree ((@A d q r).map VecPairToInt : Set (ℤ × ℤ)) :
   have : xd.val + y.val = x.val + yd.val := by
     ext i
     induction' i using Fin.induction with i hi
-    · simp only [Pi.add_apply, Pi.coe_nat]
+    · simp only [Pi.add_apply, Pi.natCast_def]
       have h_bound : |(xd.val 0 + y.val 0) - (x.val 0 + yd.val 0)| < q := by
         have h₁ := (mem_A_iff.mp hdx₁).right.left 0
         have h₂ := (mem_A_iff.mp hdx₁).right.right 0
@@ -193,7 +218,9 @@ theorem part1 : AddCornerFree ((@A d q r).map VecPairToInt : Set (ℤ × ℤ)) :
           hx, hy, hdx, hdy, add_comm im_y, ← add_assoc]
         ring_nf
       simpa [sub_eq_zero] using eq_zero_of_modEq_zero_of_abs_lt h_bound h_modeq
-    · done
+    · sorry
+
+  sorry
 
 @[elab_as_elim] def induction {n : ℕ} {motive : Fin (n + 1) → Sort _} (zero : motive 0)
     (succ : ∀ i : Fin n, motive i.castSucc → motive i.succ) :
