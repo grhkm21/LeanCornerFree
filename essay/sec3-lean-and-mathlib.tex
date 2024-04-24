@@ -29,13 +29,6 @@ We now turn to the \textit{inference rules}, which are axioms within the type th
 
 The inference rule is expressed in Gentzen's notation \cite{Gentzen1935a}, \cite{Gentzen1935b}. The ``input'' judgements (also called \textit{hypotheses}) are above the line and the ``output'' judgement is below the line, and the rule as a whole states that given the hypotheses (in a context), one can create the output judgement. In informal English, this is saying is that ``given an element \(t\) of type \(T_1\) and an element \(h\) of type \(T_1 = T_2\), we can produce an element of type \(T_2\)''. In set theory, this translates to the tautology ``if \(x \in X\) and \(X = Y\), then \(x \in Y\)'', which is true as sets are determined by their elements.
 
-Using this notation, we can express function applications above by simple inference rules:
-
-\[
-  \infer{\goal f.a : \beta}{\goal f : \alpha \to \beta & \goal a : \alpha} \qquad
-  \infer{\goal g.n : T n}{\goal T : \N \to \mathrm{Type} & \goal g : \prod_{n : \N} T(n) & \goal n : \N}
-\]
-
 Another example of inference rules would be that of an \textit{inductive type}, such as the type of natural numbers \(\texttt{Nat}\) or \(\N\). We can define the type inductively, analogous to the Peano axioms, via two introduction rules: one for the zero elements \(0\), and one for constructing successors. We can express the two rules in Gentzen's notations simply as:
 
 \[
@@ -45,17 +38,87 @@ Another example of inference rules would be that of an \textit{inductive type}, 
 
 The first rule says that (with no hypothesis, that is, out of ``thin air'') an element \(0_{\N}\) can always be constructed, while the second rule says that there is a function \(\mathrm{succ}_{\N} : \N \to \N\) that constructs new \(\N\). The type \(\N\) is \textit{defined} to be all elements constructable via these two methods.
 
-We shall not continue in this path of type theory, as it quickly ventures into details of type theory that we will not need to understand Lean. The interested reader can refer to~\cite{Rijke2022} for a detailed resource on the topic.
+Using this notation, we can express function applications above by simple inference rules:
 
-\subsection{DTT and Maths}
-%% TODO: Add relation between this and normal function notation f : M \to N
-\todo{Mention the relation of DTT with Math, that formalising a proof corresponds to creating a term with the correct type.}
+\[
+  \infer{\goal f.a : \beta}{\goal f : \alpha \to \beta & \goal a : \alpha} \qquad
+  \infer{\goal g.n : T n}{\goal T : \N \to \mathrm{Type} & \goal g : \prod_{n : \N} T(n) & \goal n : \N}
+\]
 
-\subsection{Curry-Howard Correspondence}
-\todo{Connect Lean with Mathlib: as demonstrated above, there is a strong relation betwen Mathematical proofs and typed expressions.}
+And function \textit{constructors} by the following inference rules:
+
+\[
+  \infer{\goal \lambda x. b(x) : \alpha \to \beta}{x : \alpha \goal b(x) : \beta} \qquad
+  \infer{\goal \lambda x. b(x) : \prod_{a : \alpha} T(a)}{\goal T : \alpha \to \mathrm{Type} & a : \alpha \goal b(a) : T(a)}
+\]
+
+To give one final example, here is a computation rule for functions:
+
+\[
+  \infer{\goal h(p) : \beta}{\goal p : \alpha & \goal h : \alpha \to \beta}
+\]
+
+As we will see in the next sections, it plays a fundamental role in how theorem provers work.
+
+We shall not continue in this direction of type theory, as it quickly ventures into details of type theory that we will not need to understand Lean. The interested reader can refer to~\cite{Rijke2022} for a detailed resource on the topic.
+
+\subsection{The Curry-Howard Correspondence} \label{sec:ch-correspondence}
+\todo{\ok Connect Lean with Mathlib: as demonstrated above, there is a strong relation betwen Mathematical proofs and typed expressions.}
 
 We have seen how the constructors of \(\N\) are expressed in formal type theory language, and also how our intuition on equalities translate to type theoretical language. This suggests there is a strong relation between Mathematical proofs and typed terms, and indeed there is, via the \textit{Curry-Howard correspondence}.
 
 Recall that a type \(T\) can vaguely be thought of as a set \(X_T\) containing all elements of that type. For example, when \(T = \N\), the set \(X_{\N}\) is, well, just \(\N = \{0, 1, 2, \cdots\}\). What about when \(T = (2 + 2 = 4)\)? The set \(X_T\) will be the set of all elements of type \(T\), i.e. \(X_T = \{x : T\}\). One interpretation of such elements \(x \in X_T\) is that they are \textit{proofs} of the proposition \(T\).
 
-To make this interpretation meaningful, further suppose that we have a term \(f : T \to T'\), where \(T' = (2 + 2) + 1 = 4 + 1\). Informally, the term \(f\) simply adds \(1\) to both sides of an equality. By the inference rule for function applications, we can use \(x : T\) and \(f : T \to T'\) to construct \(f.x : T'\). In particular, if we interpret terms \(x : T\) and \(f.x : T'\) as proofs of the propositions \(T\) and \(T'\) respectively, then \(f : T \to T'\) serves not just as a function, but also a ``proof step'' in a Mathematical proof; for ``proof steps'' I mean theorems, lemmas, claims or algebraic steps that appear in a normal Mathematical proof on paper.
+To make this interpretation meaningful, further suppose that we have a term \(f : T \to T'\), where \(T' = (2 + 2) + 1 = 4 + 1\), where informally, the term \(f\) simply adds \(1\) to both sides of an equality. By the inference rule for function applications, we can use \(x : T\) and \(f : T \to T'\) to construct \(f(x) : T'\). In particular, if we interpret terms \(x : T\) and \(f(x) : T'\) as proofs of the propositions \(T\) and \(T'\) respectively, then \(f : T \to T'\) serves not just as a function, but also a ``proof step'' in a Mathematical proof; for ``proof steps'' I mean theorems, lemmas, claims or algebraic steps that appear in a normal Mathematical proof on paper.
+
+To give another example, let us prove the transitivity of implications from classical logic, i.e. that for propositions \(P, Q, R\), if \(P\) implies \(Q\) and \(Q\) implies \(R\), then \(P\) implies \(R\). Through the Curry-Howard correspondence, it suffices to construct a term of type \(P \to R\), given terms \(h_1 : P \to Q\) and \(h_2 : Q \to R\). The term desired can be constructed by \(h_2 \circ h_1\), or more explicitly, by the term \(f : P \to R\) given by \(f(p) = h_2(h_1(p))\). In the language of inference rules, it can be written as follows~\label{ch-tree}:
+
+\[
+  \infer{\goal \lambda p. h_2(h_1(p)) : P \to R}{\infer{p : P \goal h_2(h_1(p)) : R}{\infer{p : P \goal h_1(p) : Q}{\goal h_1 : P \to Q} & \goal h_2 : Q \to R}}
+\]
+
+This is precisely how theorem provers such as Lean work via the Curry-Howard correspondence: by treating Mathematical statements as types and Mathematical proofs as terms of that type, a \textit{valid} DTT term of the type would imply that the corresponding Mathematical statement is correct. Moreover, the validity of a DTT term is relatively easy to check by a computer: it boils down to checking if the types match up and everything is ``intuitively correct'', and definitely easier than checking a Mathematical proof filled with informal lingual.
+
+\subsection{DTT and Lean}
+\todo{\ok Given examples of Lean proofs, relating to the CH correspondence.}
+
+Now that we have established the connection between DTT and Mathematics, as well as DTT and theorem provers, it is time to connect Mathematics with theorem provers, of which of course we focus on Lean.
+
+Lean is a theorem prover built on top of a Dependent Type Theory, more specifically the Martin-Löf Type Theory (with several extra ``add-ons''). Of course, users do not type in typed lambda expressions or inference trees directly into Lean, or else no Mathematicians would use it. Instead, users are able to type commands that manipulate the context (goal state + hypotheses) that mimicks paper proofs - see below for examples \footnote{We will only use tactic mode in this essay.}. Lean has several different parts, such as the \textit{elaborator} and \textit{type inferencer}, which translate such commands into DTT terms (which may look like \(\mathrm{Eq} ((\lambda x. f x) y) (f y)\), for example). Finally, these terms are passed on to the Lean 4 kernel, which verifies the term is indeed correct. An extremely important detail is that the Lean 4 kernel is quite small, around \(18200\) lines of code (via~\mintinline[fontsize=\footnotesize]{sh}{find ~/git/lean4/src -path "*/library/*.cpp" -or -path "*/kernel/*.cpp" | xargs cloc}).
+
+As an example, let us formalise our proof for \((P \implies Q) \land (Q \implies R) \implies (P \implies R)\). From \ref{sec:ch-correspondence}, our task is reduced to constructing a term of type \(P \to R\), given two terms \(h_1 : P \to Q\) and \(h_2 : Q \to R\). In Lean, it is written as follows:
+
+\begin{minted}{lean}
+example {P Q R : Prop} (h₁ : P → Q) (h₂ : Q → R) : P → R := by
+  intro p
+  have q := h₁ p
+  exact h₂ q
+\end{minted}
+
+Let us unpack this slowly. The first line begins with the \mintinline{lean}{example} keyword, which is used to indicate the start of a(n unnamed) proof. Next, the \mintinline{lean}{{P Q R : Prop}} and \mintinline{lean}{(h₁ : P → Q) (h₂ : Q → R)} tokens are the hypotheses of our claim. Here, in the curly braces we are stating the judgements \(\goal P, Q, R : \mathrm{Prop}\), while the latter ones in parentheses are the judgements \(\goal h₁ : P \to Q\) and \(\goal h₂ : Q \to R\). After the hypotheses, we have the goal state, that is, the type of which we would like to construct a term for. Here, it is the type \(P \to R\). Simple!
+
+From the second line onwards, we begin to write the proof of the statement. Here, I followed the proof given by the inference tree~\cite{ch-tree}. On the second line, we have \mintinline{lean}{intro p}. Notice that at this point, our goal (type) is of the form \(P \to R\), and from the inference rules of the function constructors, we know that it suffices to ``give'' an element \(r : R\), for every element \(p : P\). The \mintinline{lean}{intro} keyword (called a \textit{tactic}) effectively introduces the \(p : P\) into the context. On the inference tree, it is turning the goal state from the final layer to the second last layer:
+
+\[
+  \infer{\goal P \to R}{\cdots} \quad \longrightarrow \quad \infer{\goal P \to R}{\infer{\color{red} p : P \goal R}{\cdots}}
+\]
+
+Now that we have \(p : P\) in context, we can proceed by applying \(h_1\) at it. More specifically, we introduce a term \(q \coloneqq h_1(p)\). This is done by the \mintinline{lean}{have} keyword on the third line. The \mintinline{lean}{q} on the left is the new variable name, while the \mintinline{lean}{h₁ p} on the right is the definition.
+
+\[
+  \infer{\cdots}{\goal h_1 : P \to Q} \quad \longrightarrow \quad \infer{\cdots}{\infer{\color{red} \goal h_1(p) : Q}{\goal p : P & \goal h_1 : P \to Q}}
+\]
+
+Finally, we can combine this term with \(h_2\) to get \(h_2(q) = h_2(h_1(p))\), which is a term of our goal, the type \(R\). To conclude the proof with a term, we use the \mintinline{lean}{exact} keyword, followed by the term. This completes the inference tree from~\ref{ch-tree}.
+
+For those who are curious, it is possible to print the full expression of type \(R\) constructed via the \mintinline{lean}{#print} command within Lean. For the code above, here is the output:
+
+\begin{minted}{lean}
+theorem f : ∀ (P Q R : Prop), (P → Q) → (Q → R) → P → R :=
+  fun P Q R h₁ h₂ p => let_fun q := h₁ p; h₂ q
+\end{minted}
+
+We see that there is a \mintinline{lean}{let_fun} statement which can be inlined (or substituted), but otherwise it is a single expression \(\lambda P. \lambda Q. \lambda R. \lambda h_1. \lambda h_2. \lambda p. h_2h_1p)\).
+
+\subsection{Necessity of Mathlib}
+\todo{Give an example of a Mathematical proof to motivate the existence of Mathlib, introduce it, and give an example on how to use it.}

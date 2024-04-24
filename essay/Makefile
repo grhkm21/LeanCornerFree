@@ -1,4 +1,4 @@
 all:
-	# lualatex -draftmode -interaction nonstopmode main.tex
+	# xelatex --shell-escape -draftmode -interaction nonstopmode main.tex
 	# biber main
-	lualatex -interaction nonstopmode main.tex
+	xelatex --shell-escape -interaction nonstopmode main.tex

@@ -2,6 +2,12 @@
 \usepackage{template}
 \addbibresource{local.bib}
 
+% instruct minted to use our local theorem.py
+\usepackage{minted}
+\usemintedstyle{tango}  % a nice, colorful theme
+\setminted[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
+\setmintedinline[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
+
 % \usepackage[draft]{comments-bugs-todos}
 % \NewDocumentCommand\gma{s m o}{\IfBooleanTF{#1}{\cmnt*{gma}{#2}}{\cmnt{gma}{#2}}}
 
