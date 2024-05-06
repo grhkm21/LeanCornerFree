@@ -1,2 +1,98 @@
-\section{Green's Corner-free Construction}
-\todo{Detailed mathematical proof of Green's construction.}
+\section{Green's Corner-free Construction} \label{sec:green_corner_free}
+\todo{\ok Detailed mathematical proof of Green's construction.}
+
+As noted in~\cref{sec:corner_free}, there is often a close connection between large \(3\)-AP-free sets and large corner-free sets. Indeed, it is possible to modify Behrend's \(3\)-AP-free set construction into a corner-free set construction. However, we will not show that construction here, as the result has been superseded by that of~\cite{LinialShraibman2021} and soon after~\cite{Green2021}.
+
+Instead, as the title of the chapter suggests, we will show the construction by Green from~\cite{Green2021}, simplified by the author in this work by unifying with the framework from~\cref{sec:behrend_3ap}. Below, \(\Z_q = \{0, 1, \ldots, q - 1\} \subseteq \Z\), not cosets \(\Z / q\Z\).
+
+\begin{enumerate}
+  \item Constructing an appropriate corner-free ``two-dimensional'' additive semiring \(X = X_{r, q, d} \subseteq \Z_q^d \times \Z_q^d\) with special properties, parametrised by certain parameters \(r, q, d\);
+  \item Use the naive embedding \(\zeta : \Z_q^d \to \Z\) by parsing vectors as base-\(q\) digits of integers;
+  \item Prove that for \((\zeta(x), \zeta(y)), (\zeta(x'), \zeta(y)), (\zeta(x), \zeta(y')) \in \widetilde{\zeta}(X)\), \(\zeta(x') + \zeta(y) = \zeta(x) + \zeta(y') \implies x' + y = x + y'\) (using the special properties of construction);
+  \item Conclude that \(\widetilde{\zeta}(X)\) is also cornerfree;
+  \item Optimise parameters.
+\end{enumerate}
+
+The similarity in structure between this and Behrend's \(3\)-AP-free construction is clear. To motivate the construction of \(X\), it is most convenient to start with step 3, which is the main technical part of the proof. As before, we try to prove (3.) by proving the equality holds for the \(i\)-th digit: \(x'_i + y_i = x_i + y'_i\). A technical difficulty we face is that the idea of taking \(\zeta(x') + \zeta(y) = \zeta(x) + \zeta(y')\) modulo \(q\) only gives us \(x'_0 + y_0 \equiv x_0 + y'_0 \pmod{q}\), and that is not sufficient to prove that they are equal over the integers. An easy fix is to note that \(x_0 - y_0 \equiv x'_0 - y'_0 \pmod{q}\), so if we constraint elements \((x, y) \in X\) to satisfy \(x - y \in [k, k + q)\) for some fixed constant \(k\), then equality over integer would hold.
+
+With this constraint, step \(3\) goes through via induction, and step \(4\) follows by taking contrapose. The only obstacle that remains is adding additional constraints to \(X\) to ensure that it is corner-free. Green's \textit{magic ingredient} is the parallelogram law, which we recall below.
+
+\begin{theorem}{Parallelogram Law}{}
+  Let \((X, \| \cdot \|)\) be a normed space. Then, for all \(x, y \in X\), we have
+  \[
+    2\|x\|^2 + 2\|y\|^2 = \|x + y\|^2 + \|x - y\|^2
+  \]
+\end{theorem}
+
+As a special case, if \(\|x\| = \|x + y\| = \|x - y\|\), then we can conclude \(\|y\| = 0\). With this in mind, we can describe the full construction by Green.
+
+\textbf{Step 1}: Let \(X \coloneqq \{(x, y) \in \Z_q^d \times \Z_q^d : \|x - y\|_2^2 = r \land k \leq x_i + y_i < k + q\}\), where \(k, q, d, r\) are constants to be determined.
+
+\begin{lemma}
+  The set \(X\) is corner-free.
+\end{lemma}
+
+\begin{proof}
+  Suppose that \((x, y), (x + d, y), (x, y + d) \in X\) be a corner in \(X\). By construction, we have \(\|x - y\|_2^2 = \|x - y + d\|_2^2 = \|x - y - d\|^2 = r\). By the discussion above, we see that \(\|d\| = 0\).
+\end{proof}
+
+\vspace{5mm}
+
+\textbf{Step 2}: Define \(\zeta : \Z_q^d \to \Z\), sending \(\zeta(\mathbf{x}) = \sum_{i = 0}^{d - 1} x_i q^i\), which is injective. Also define \(\mathcal{A} \coloneqq \widetilde{\zeta}(X)\), where \(\widetilde{\zeta} : \Z_q^d \times \Z_q^d \to \Z \times \Z\) is just coordinate-wise application of \(\zeta\).
+
+\vspace{5mm}
+
+\textbf{Step 3}: Suppose that \(\zeta(x') + \zeta(y) = \zeta(x) + \zeta(y')\) for elements \((x, y), (x', y), (x, y') \in X\). By expanding the definition of \(\zeta\) and taking modulo \(q\), we have \(x'_0 + y_0 \equiv x_0 + y'_0 \pmod{q}\), i.e. \(x_0 - x'_0 \equiv y_0 - y'_0 \pmod{q}\). By construction, \(x_0 - x'_0\) and \(y_0 - y'_0\) both only take value in \([k, k + q)\), so they must equal as integers. Now suppose that \(x_i - x'_i = y_i - y'_i\) for \(i = 0, 1, \ldots, k - 1\). Then, \(\zeta(x) = \sum_{i = k}^{n - 1} x_i q^i\), and similar for \(x', y, y'\). By dividing out \(q^k\) and taking modulo \(q\) again, by a similar argument we have \(x_k - x'_k = y_k - y'_k\). By induction, we have \(x - x' = y - y'\).
+
+\vspace{5mm}
+
+\textbf{Step 4}: If not, then the corner in \(\mathcal{A}\) would imply \(x' + y = x + y'\), where \((x, y), (x', y), (x, y') \in X\). This implies \(x' - x = y' - y\), meaning \(X\) has a corner, contradiction.
+
+\vspace{5mm}
+
+\textbf{Step 5}:\label{lemma:asympt} The computation below is pretty routine on paper, but is tricky to formalise in Lean. Skip ahead to~\cref{sec:impl_asymptotics} for more information. As a result, all computations are asymptotic and we will be slightly handwavy regarding lower order terms.
+
+To begin, consider the discretised torus \(\mathbb{T} = \{(x, y) \in \Z_q^d \times \Z_q^d : k \leq x_i + y_i < k + q\}\). Since each coordinate is independent, we have \(|\mathbb{T}| = |\{(x, y) \in \Z_q^2 : k \leq x_i + y_i < k + q\}|^d\). We also know \(x_i + y_i \in [0, 2q - 2]\), so the only reasonable values of \(k\) are \(k \in [0, q - 1)\). Now, note that \(\{(x, y) \in \Z_q^2 : x_i + y_i \in [k, k + q)\} = \Z_q^2 \setminus \{(x, y) \in \Z_q^2 : x_i + y_i \in [0, k) \lor x_i + y_i \in [k + q, 2q - 2]\}\), which are the lattices points of \(\Z^2\) inside two triangle regions. By basic geometry, one can find that \(|\mathbb{T}| = \left(q^2 - \frac{k^2}{2} - \frac{(q - k)^2}{2} + O(k)\right)^d = \left(\frac{q^2 + 2qk - 2k^2}{2}\right)^d\). In particular, this is maximised when \(k = q / 2\), where \(|\mathbb{T}| = \left(\frac{3}{4}q^2 + O(q)\right)^d\).
+
+\vspace{5mm}
+
+Next, note that the sets \(X_r = \{(x, y) \in \mathbb{T} : \|x - y\|_2^2 = r\) for \(r = 0, \ldots, d(q - 1)^2\) partition the \(\mathbb{T}\). By the Pigeonhole Principle, there exists \(r\) such that \(|X_r| \geq \frac{1}{d(q - 1)^2 + 1}|\mathbb{T}| \geq \frac{1}{dq^2}\left(\frac{3}{4}q^2 + O(q)\right)^d\).
+
+Now, consider a fixed value \(d\) and let \(N \coloneqq q^d\) be the size of the bounding square of \(\mathcal{A}\). Then, \(\mathcal{A} \subseteq [N] \times [N]\) is a corner-free set, and \(|\mathcal{A}| / N^2 \geq \frac{1}{dq^2}\left(\frac{3}{4} + O\left(\frac{1}{q}\right)\right)^d\). Choose \(q = (c + o(1))^d\) where \(c\) is a constant to be determined. Then, \(d = \log N / \log q = \log N / \left(d\log(c + o(1))\right)\). Rearranging, we get \(d = \sqrt{\frac{\log N}{\log(c + o(1))}} = \sqrt{\frac{\log N}{\log c + o(1)}} = \sqrt{\frac{\log N}{\log c} + o(1)} = \left(\sqrt{\frac{1}{\log_2 c}} + o(1)\right)\sqrt{\log_2 N}\).
+
+Substituting this back into \(q\), we have
+
+\[
+  q = \left((c + o(1))^{\sqrt{\frac{1}{\log_2 c}} + o(1)}\right)^{\sqrt{\log_2 N}} = \left(c^{\sqrt{\frac{1}{\log_2 c}} + o(1)}\right)^{\sqrt{\log_2 N}}
+\]
+
+Substituting these into the main term, we have
+
+\begin{align*}
+  (dq^2)^{-1}
+  &= \left[\left(\sqrt{\frac{1}{\log_2 c}} + o(1)\right)\left(c^{2\sqrt{\frac{1}{\log_2 c}} + o(1)}\right)^{\log_2 N}\sqrt{\log_2 N}\right]^{-1} \\
+  % &= \frac{1}{\sqrt{\log_2 N}}\left(\sqrt{\log_2 c} + o(1)\right)\left(c^{\left(-2\sqrt{\frac{1}{\log_2 c}} + o(1)\right)\log_2 N}\right) \\
+  &= \frac{1}{\sqrt{\log_2 N}}\left(c^{\left(-2\sqrt{\frac{1}{\log_2 c}} + o(1)\right)\log_2 N}\right)
+\end{align*}
+
+And
+
+\[
+  \left(\frac{3}{4} + O\left(\frac{1}{q}\right)\right)^d
+  = \left(\frac{3}{4} + o(1)\right)^d
+  = \left(\frac{3}{4}\right)^{d + o(1)}
+  = \left(\frac{3}{4}\right)^{\left(\sqrt{\frac{1}{\log_2 c}} + o(1)\right)\sqrt{\log_2 N}}
+\]
+
+Hence,
+
+\begin{align*}
+  |\mathcal{A}| / N^2
+  &\geq (dq^2)^{-1}\left(\frac{3}{4} + O\left(\frac{1}{q}\right)\right)^d \\
+  &= \frac{1}{\sqrt{\log_2 N}} e^{\left(\left(-2\log c + \log\left(\frac{3}{4}\right)\right)\sqrt{\frac{1}{\log_2 c}} + o(1)\right) \log_2 N} \\
+  &= e^{\left(\left(-2\log c + \log\left(\frac{3}{4}\right)\right)\sqrt{\frac{1}{\log_2 c}} + o(1)\right) \log_2 N} \\
+\end{align*}
+
+We want to choose \(c\) such that \(\left(-2\log c + \log\left(\frac{3}{4}\right)\right)\sqrt{\frac{1}{\log_2 c}}\) is maximised. With some elementary calculus, one can show that the optimal choice is \(c = \exp\left(-\frac{\log\left(\frac{3}{4}\right)}{2}\right) = \frac{2}{\sqrt{3}}\), achieving \(|\mathcal{A}|/N^2 \geq e^{(-\kappa + o(1))\log_2 N}\) for \(\kappa = 2\log 2\sqrt{2\log_2\left(\frac{4}{3}\right)} \approx 0.5485 \ldots\), finishing the construction analysis.
+
+We will defer the discussion of how the proof above is formalised in Lean to~\cref{sec:impl_asymptotics}. In short, the key observation is that most asymptotics terms are \(o(1)\), which are functions \(f\) that tends to \(0\) as the parameters go to infinity. This turns the asymptotics analysis from an asymptotics probllem into a limit problem.

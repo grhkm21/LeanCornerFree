@@ -1,6 +1,54 @@
-\section{Behrend's 3AP-free Construction}
-\todo{Detailed mathematical proof of Behrend's construction, including the interpretation using Freiman isomorphism. This way I can claim \textit{original work}.}
+\section{Behrend's \(3\)-AP-free Construction} \label{sec:behrend_3ap}
+\todo{\ok Detailed mathematical proof of Behrend's construction, including the interpretation using Freiman isomorphism. This way I can claim \textit{original work}.}
 
-Before we dive into Ben Green's result for corner-free sets, let us look at Behrend's 3AP-free construction from 1946, which is simple to describe and serves to motivate Ben Green's result.
+Before we dive into Ben Green's result for corner-free sets, let us look at Behrend's \(3\)-AP-free construction from 1946, which is simple to describe and serves to motivate Ben Green's result.
 
+The modern interpretation of Behrend's result divides the construction into five parts:
 
+\begin{enumerate}
+  \item Construct an appropriate \(3\)-AP-free additive semiring \(X = X_{q, r}\) parametrised by certain parameters \(q, r\);
+  \item Construct an injection \(\varphi : X \to \Z\), which restricts to a bijective function \(\widetilde{\varphi} : X \to Z \subseteq \Z\);
+  \item Prove that \(\varphi(w) + \varphi(x) = \varphi(y) + \varphi(z) \implies w + x = y + z\)\footnote{If the implication is bidirectional, which Behrend's \textit{is}, then we say \(\varphi\) is a \textbf{Freiman isomorphism} (of order \(2\))~\cite{NathansonRuzsa1999}.};
+  \item Conclude that \(\varphi(X)\) is also \(3\)-AP-free;
+  \item Optimise parameters such that \(X_{q, r}\) is as large as possible relative to the range of \(\varphi(X)\).
+\end{enumerate}
+
+In Behrend's construction, he takes the lattice points on the sphere \(X_{q, r} \coloneqq \{(x_0, \ldots, x_{n - 1}) \in [1, q]^n : x_0^2 + \cdots + x_{n - 1}^2 = r^2\}\), with addition being the usual vector addition. The fact that this is \(3\)-AP-free follows from a rather trivial geometric fact: a line intersects a sphere at most two points.
+
+Next, Behrend defines the function \(\varphi : X_{q, r} \to \Z\), given by \(\varphi(x_0, x_1, \ldots, x_{n - 1}) \coloneqq \sum_{i = 0}^{n - 1} x_i(2q)^i\). In other words, \(\varphi\) converts a vector into the corresponding base-\(2q\) integer. To prove the required properties of \(\varphi\), we will need the following lemma.
+
+\begin{lemma} \label{lemma:eq_zero}
+  Let \(\mathbf{x} = (x_0, x_1, \ldots, x_{n - 1}) \in (-2q, 2q)^n\). Then, \(\varphi(\mathbf{x}) = 0\) if and only if \(\mathbf{x} = 0\).
+\end{lemma}
+
+\begin{proof}
+  The \(\impliedby\) direction is trivial. We prove the \(\implies\) direction by induction, where the idea is to look at modulo powers of \(2q\). For the base case, \(0 = \varphi(\mathbf{x}) = x_0 + \sum_{i = 1}^{n - 1} x_i(2q)^i \equiv x_0 \pmod{2q}\). Since \(|x_0| < 2q\), the equivalence \(x_0 \equiv 0 \pmod{2q}\) implies \(x_0 = 0\). Now, suppose that \(x_0 = x_1 = \cdots = x_k = 0\) for some \(k \in [0, n - 1)\). Then, \(\varphi(\mathbf{x}) = \sum_{i = k + 1}^{n - 1} x_i(2q)^i = x_{k + 1}(2q)^{k + 1} + (2q)^{k + 2} \sum_{i = 0}^{(n - 2) - (k + 2)} x_{i + k + 2}(2q)^i\). Dividing by \((2q)^{k + 1}\) and taking modulo \(2q\), we see that \(x_{k + 1} \equiv 0 \pmod{2q}\) again, meaning \(x_{k + 1} = 0\). Hence by induction, \(\mathbf{x} = 0\).
+\end{proof}
+
+With this, we can prove the requirements for \(\varphi\) to be a Freiman isomorphism of order \(2\).
+
+\begin{itemize}
+  \item \(\varphi\) is injective on \(X_{q, r}\). This is because if \(f(x) = f(y)\) for some \(x, y \in X_{q, r}\), then \(f(x) - f(y) = f(x - y) = 0\). Since \(x, y \in [1, q]^n\), we have \(x - y \in [1 - q, q - 1]^n \subseteq (-2q, 2q)^n\). By~\cref{lemma:eq_zero}, we have \(x - y = 0\), i.e. \(x = y\).
+  \item \(\varphi(w) + \varphi(x) = \varphi(y) + \varphi(z) \implies w + x = y + z\). To see this, suppose that \(\varphi(w) + \varphi(x) - \varphi(y) - \varphi(z) = \varphi(w + x - y - z) = 0\). Since \(w - y, x - z \in [1 - q, q - 1]^n\), we have \(w + x - y - z \in (-2q, 2q)^n\). By~\cref{lemma:eq_zero}, we have \(w + x - y - z = 0\), i.e. \(w + x = y + z\).
+  \item \(w + x = y + z \implies \varphi(w) + \varphi(x) = \varphi(y) + \varphi(z)\). This follows directly from linearity of \(\varphi\).
+\end{itemize}
+
+From this, it follows that \(\varphi(X_{q, r})\) is indeed \(3\)-AP-free:
+
+\begin{lemma} \label{lemma:hyp_3ap}
+  Let \(X\) be a \(3\)-AP-free space, \(Y\) be an arbitrary space, and \(\varphi : X \to Y\) a map. If \(\varphi(w) + \varphi(x) = \varphi(y) + \varphi(z) \implies w + x = y + z\) for all \(w, x, y, z \in X\), then \(Y\) is also \(3\)-AP-free.
+\end{lemma}
+
+\begin{proof}
+  Suppose not. Then, there exists distinct \(\varphi(x), \varphi(y), \varphi(z) \in \varphi(X)\) such that \(\varphi(x) + \varphi(z) = 2\varphi(y) = \varphi(y) + \varphi(y)\). Since \(\varphi\) is a Freiman isomorphism, we have \(x + z = y + y\), i.e. \((x, y, z) \subseteq X^3\) forms a \(3\)-AP, contradiction.
+\end{proof}
+
+By~\cref{lemma:hyp_3ap}, its image \(\varphi(X) \subseteq \Z\) is also a \(3\)-AP-free set.
+
+The final step of the construction is mostly independent from the steps above, and involves optimising the parameters \(q, r\) such that \(\varphi(X_{q, r})\) is the densest. Define \(A(q, r) \coloneqq \varphi(X_{q, r}) \subseteq [1, (2q)^n] \subseteq [1, N]\), by taking \(q \coloneqq \lfloor N^{1 / n} / 2 \rfloor\). Since \(r\) is the radius of the ball, only values \(r \in [n, nq^2]\) are meaningful, and points in \([1, q]^n\) can be sorted into buckets labelled by \(r \in [n, nq^2]\) by their norm. By the Pigeonhole Principle, there exists \(r \in \Z\) such that \(|X_{q, r}| \geq \frac{q^n}{nq^2}\). Hence, we can compute the (asymptotic) density as
+
+\[
+  \frac{|A(q, r)|}{N} = \frac{|X_{q, r}|}{N} \geq \frac{q^{n - 2}}{nN} \approx \frac{N^{(n - 2) / n}}{nN \cdot 2^{n - 2}} \geq N^{-2 / n} \cdot \frac{2^{2 - n}}{n}
+\]
+
+The logarithm is approximately \(-\frac{2}{n}\log N + (2 - n)\log 2\), which is maximised when \(n = \sqrt{2\log N / \log 2}\). Then, \(|A(q, r)| / N \geq e^{-c\sqrt{\log N}}\) with \(c = 2\sqrt{2\log 2}\), attaining Behrend's bound (modulo handwaving constants).

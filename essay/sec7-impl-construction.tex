@@ -1,3 +1,79 @@
-\section{Implementation: Construction}
-\todo{Describe the implementation of the construction (\texttt{construction.lean}) in detail.}
+\section{Implementation: Construction} \label{sec:impl_construction}
+\todo{\ok Describe the implementation of the construction (\texttt{construction.lean}) in detail.}
 
+In the following three sections, we will describe the implementation of the ABCs of the proof: ~\nameref{sec:impl_asymptotics}, ~\nameref{sec:impl_bridge} and ~\nameref{sec:impl_construction} (though perhaps CABs is more appropriate). We show the Lean statements of the major results proven in the project, and explain some choices made along the way.
+
+Just to clarify the terminology, \textit{construction} refers to \textbf{Step 1 - 4} of ~\cref{sec:green_corner_free}, \textit{bridge} refers to computing \(|\mathbb{T}|\) for \(k = q / 2\), and \textit{asymptotics} refer to computing an asymptotic lower bound for \(|X_r|\).
+
+\subsection{Corner-free sets}
+
+Firstly, a \mintinline{lean}{CornerFree} predicate of type \(\mathbf{Set} (\alpha \times \alpha) \to \mathbf{Prop}\) is defined for any commutative group \(\alpha\):
+
+\begin{minted}{lean}
+@[to_additive "..."]
+def MulCornerFree {α : Type*} [DecidableEq α] [CommGroup α] (s : Set (α × α)) : Prop :=
+  ∀ x y d, (x, y) ∈ s → (x * d, y) ∈ s → (x, y * d) ∈ s → d = 1
+\end{minted}
+
+The \mintinline{lean}{@[to_additive "..."]} is an \textit{attribute} defined by Mathlib. As the name suggests, this attribute automatically generalises a multiplicative definition into an additive one. More specifically, it automatically generates another definition \mintinline{lean}{AddCornerFree}, given by:
+
+\begin{minted}{lean}
+def AddCornerFree {α : Type*} [DecidableEq α] [AddCommGroup α] (s : Set (α × α)) : Prop :=
+  ∀ x y d, (x, y) ∈ s → (x + d, y) ∈ s → (x, y + d) ∈ s → d = 0
+\end{minted}
+
+This definition is a straightforward generalisation of the notation of corner-free sets in \(\Z^2\) to other additive / multiplicative groups. It is possible to generalise the definition to monoids (groups without inverses), but that made certain proofs harder, so we avoided that direction.
+
+We also have an alternative definition \mintinline{lean}{MulCornerFree'}, given by:
+
+\begin{minted}{lean}
+@[to_additive "..."]
+def MulCornerFree' (s : Set (α × α)) : Prop :=
+  ∀ x y x' y' d, (x, y) ∈ s → (x', y) ∈ s → (x, y') ∈ s → x' = x * d → y' = y * d → d = 1
+\end{minted}
+
+For finite sets \(s\), this version is decidable; see~\cref{sec:correctness} for a detailed discussion.
+
+\subsection{Constructing \(X_{r, q, d}\)}
+
+Next, we construct the sets \(X = X_{r, q, d} \subseteq \Z_q^d \times \Z_q^d\) as described in~\cref{sec:green_corner_free}. We approach this by \mintinline{lean}{filter}ing the elements we ``want'' out of the finite set of all elements in \(\Z_q^d \times \Z_q^d\). Lean has a type for \(\Z / q\Z\), namely the type \mintinline{lean}{Fin q}. A naïve approach would be to define \(X\) to be
+
+\begin{minted}{lean}
+  def X : Finset ((Fin d → Fin q) × (Fin d → Fin q)) := univ.filter ...
+\end{minted}
+
+However, this is an \textit{incorrect} definition! The reason is that both Lean's \mintinline{lean}{Fin q} type and the mathematical \(\Z / q\Z\) type are groups, and as a consequence, \((q - 1) + 1 = 0\) within the group. However, for our construction, we do \textit{not} want this behaviour. Instead, we would like to treat \(\Z_q\) as a subset of \(\Z\), with the addition operator induced from \(\Z\). The solution we decided to go with is to use the \textit{subtype} \(\{ a : \Z // a \in [0, q) \}\). To represent \(T^d\) for a type \(T\), one abandoned idea was to use the \mintinline{lean}{Module} and related API from Mathlib, which is used in linear algebra to represent vector spaces. However, we found it hard to use especially without an explicit coordinate, so we instead went with \mintinline{lean}{Fin d → T}. The definitions below are slightly different but convey the same idea:
+
+\begin{minted}{lean}
+abbrev Vec' (d q : ℕ) := {f : Fin d → ℤ // 0 ≤ f ∧ f + 1 ≤ q}
+\end{minted}
+
+With this, we can finally define \(X\) by \mintinline{lean}{filter}ing the elements in \(X_{r, q, d}\) out from the set of all elements in \(\Z_q^d \times \Z_q^d\), determined via the \mintinline{lean}{IsInCons} proposition below:
+
+\begin{minted}{lean}
+def norm' (v : Vec d) : ℤ := ∑ i, (v i) ^ 2
+
+def IsInCons (r : ℕ) (x y : Vec' d q) : Prop :=
+    norm' (x.val - y.val) = r ∧ (q ≤ 2 * (x.val + y.val) ∧ 2 * (x.val + y.val) + 1 ≤ 3 * q)
+
+def X (r : ℕ) : Finset (Vec' d q × Vec' d q) := univ.filter (IsInCons r).uncurry
+\end{minted}
+
+There are several design choices we made. Firstly, we defined our own norm function \mintinline{lean}{norm'} instead of using Lean's \(\| \cdot \|\) function, since that takes value on \(\R\) and is inconvenient for our purpose, where \(\mathbf{v} \in \Z^d\). \label{construction_div_two} Secondly, we put \mintinline{lean}{q ≤ 2 * (x.val + y.val)} instead of \mintinline{lean}{q / 2 ≤ x.val + y.val} directly. The reason is that in Lean, integer division is defined to be the floor division (see~\cref{sec:lean_pitfall}), which would yield the incorrect inequality.
+
+The final part is to cast the vectors into integers via the map \(\zeta\), defined as \mintinline{lean}{VecToInt} below, and assert that \(\widetilde{\zeta}(X)\) is corner-free. To be clear, \mintinline{lean}{sorry}, a Lean keyword, is a \textit{placeholder} term that stands for a completed proof.
+
+\begin{minted}{lean}
+def VecToInt : Vec' d q ↪ ℤ where
+  toFun := fun v ↦ ∑ i, v.val i * q ^ i.val
+  inj' := sorry
+
+def VecPairToInt : Vec' d q × Vec' d q ↪ ℤ × ℤ where
+  toFun := fun ⟨v₁, v₂⟩ ↦ ⟨VecToInt v₁, VecToInt v₂⟩
+  inj' := sorry
+\end{minted}
+
+\begin{minted}{lean}
+theorem part1 : AddCornerFree ((@X d q r).map VecPairToInt : Set (ℤ × ℤ)) := by
+  sorry
+\end{minted}

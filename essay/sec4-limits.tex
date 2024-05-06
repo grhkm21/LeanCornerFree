@@ -4,11 +4,11 @@ We follow the presentations of~\cite{HIH2013} and~\cite{BCM2020}.
 
 \subsection{Filters}
 
-\todo{Introduce the mathematical background for filters, how they replace the traditional limits, and give some examples.}
+\todo{\ok Introduce the mathematical background for filters, how they replace the traditional limits, and give some examples.}
 
 In first year of undergraduate, we have all seen different flavours of limits. For sequences we have \(\lim_{n \to \infty} a_n\), while for functions we have \(\lim_{x \to x_0} f(x)\). Beyond these two, there are a lot more variants: \(\lim_{x \to x_0^+} f(x)\), \(\lim_{x \to x_0 \\ x \neq x_0} f(x)\), \(\lim_{x \to +\infty} f(x)\) and several other negative counterparts. Intuitively they are all the same concept, but rigorously they have slightly different definitions: for a regular limit one writes \(\forall \varepsilon > 0, \exists \delta > 0, (\forall x, |x - x_0| < \delta \implies \cdots)\), while for limits at infinity one writes \(\forall \varepsilon > 0, \exists X > 0, (\forall x \geq X, \cdots)\). The problem is even worse when one takes into account what the limiting value is. For example, even the definitions of \(\lim_{x \to x_0} f(x) = 3\) and \(\lim_{x \to x_0} f(x) = +\infty\) differ.
 
-\textit{Filters} are introduced by Henri Cartan ~\cite{Cartan1937a}, ~\cite{Cartan1937b} in order to unify the different notions of limits in topology. The idea is that \todo{include some ideas about patches and etc.}
+\textit{Filters} are introduced by Henri Cartan ~\cite{Cartan1937a}, ~\cite{Cartan1937b} in order to unify the different notions of limits in topology. They are important for us\footnote{It can be argued that one does not have to \textit{understand} filters to use filters, but of course it is better to.} as limits (and hence asymptotics) are defined using the notion of filters, rather than the conventional topological / \(\varepsilon-\delta\) deifnition. It is simplest to give the definition, then see how typical examples of filters appear in the context of limits.
 
 \begin{definition}[Filters~\cite{Massot2020}]
   A \textbf{filter} on \(X\) is a collection \(\cF\) of subsets of \(X\) such that
@@ -33,7 +33,11 @@ By definition, a filter \(\cF\) on \(X\) is a subset of \(\mathcal{P}(X)\), so i
   Let \(X = \R\). We can consider the filter \(\mathcal{N}_{+\infty}\) \textit{generated} by segments \([A, +\infty) \subset X\) for all \(A \in \R\). That is, \(\mathcal{N}_{+\infty}\) is the smallest filter / intersection of all filters containing all the segments, which is simply the collection of all subsets of \(\mathcal{N}\) containing \([A, +\infty)\) for some \(A \in \R\). This unifies the limits \(\lim_{x \to +\infty}\). The filter \(\mathcal{N}_{-\infty}\) is defined analogously. Looking ahead, the filters \(\mathcal{N}_{+\infty}\) and \(\mathcal{N}_{-\infty}\) are called \mintinline{lean}{atTop} and \mintinline{lean}{atBot} respectively, and will come up very often.
 \end{example}
 
-\todo{Define a partial ordering \(\leq\) on filters of \(X\).}
+\begin{example}
+  Let \(X\) be any space and \(S \subseteq X\). The collection of supersets of \(X\) forms a filter, called the \textit{principal filter} of \(S\) in \(X\).
+\end{example}
+
+Given two filters \(\cF, \cG\) of \(X\), if \(\cF \subseteq \cG\), then \(\cG\) is a \textit{refinement} of \(cF\), and we write \(\cG \leq \cF\). By translating between the set-theoretic and filter-theoretic perspectives, it is easy to see that \(\leq\) defines a poset structure on the space of filters of \(X\).
 
 Now that we have a handful of examples of filters, let us consider how the language of limits translate to language of filters, before giving the proper definition. For example, suppose that \(\lim_{x \to 2} f(x) = 3\) for some \(f : \R \to \R\). The most basic definition we can give is that
 
@@ -47,10 +51,10 @@ Thinking more topologically, we may say that (where \(\mathcal{B}_{\delta}(x_0)\
   \forall \varepsilon > 0, \exists \delta > 0, f\left(\mathcal{B}_{\delta}(2)\right) \subseteq \mathcal{B}_{\varepsilon}(3)
 \]
 
-To unify this even further, we would like to get rid of the quantifiers on \(\varepsilon\) and \(\delta\), of course by using filters. Let us consider the filter \(\cG = \mathcal{N}_3\) which consists of neighbourhoods around \(3\). For every \(S \in \mathcal{N}_3\), there exists an open ball \(\mathcal{B}_{\varepsilon}(3) \subset S\) for some \(\varepsilon > 0\), and we want \(f\left(\mathcal{B}_{\delta}(2)\right) \subseteq S\) for some \(\delta > 0\). Somewhat surprisingly, it can be proven that this is equivalent to \(f(\mathcal{N}_2) \subseteq S\). There is a catch though: \(f(\mathcal{N}_2)\) is not necessarily a filter on \(\R\)! A possible fix is to take the filter closure of \(f(\mathcal{N}_2)\), but a simpler fix is to observe that \(f^{-1}(\mathcal{N}_3)\) is a filter. This also gives us the first Mathematical proof of this essay:
+To unify this even further, we would like to get rid of the quantifiers on \(\varepsilon\) and \(\delta\), of course by using filters. Let us consider the filter \(\cG = \mathcal{N}_3\) which consists of neighbourhoods around \(3\). For every \(S \in \mathcal{N}_3\), there exists an open ball \(\mathcal{B}_{\varepsilon}(3) \subset S\) for some \(\varepsilon > 0\), and we want \(f\left(\mathcal{B}_{\delta}(2)\right) \subseteq S\) for some \(\delta > 0\). Somewhat surprisingly, it can be proven that this is equivalent to \(f(\mathcal{N}_2) \subseteq S\). There is a catch though: \(f(\mathcal{N}_2)\) is not necessarily a filter on \(\R\)! A possible fix is to take the filter closure of \(f(\mathcal{N}_2)\), but a simpler fix is to observe that \(f^{-1}(\mathcal{N}_3)\) is a filter. This also gives us the first mathematical proof of this essay:
 
 \begin{definition}
-  Let \(X, Y\) be spaces, \(f : X \to Y\) be a function, and \(\cF \subseteq \mathcal{P}(X)\) be a filter on \(Y\). The \textbf{pushforward filter} of \(\cF\) along \(f\), denoted \(f_*\cF\), is defined as \(f_*\cF \coloneqq f^{-1}(\cG) \subseteq \mathcal{P}\).
+  Let \(X, Y\) be spaces, \(f : X \to Y\) be a function, and \(\cF \subseteq \mathcal{P}(X)\) be a filter on \(Y\). The \textbf{pushforward filter} of \(\cF\) along \(f\), denoted \(f_*\cF\), is defined as \(f_*\cF \coloneqq \{A \subseteq Y : f^{-1}(A) \in \cF\} \subseteq \mathcal{P}(\cF)\).
 \end{definition}
 
 \begin{lemma}
@@ -58,17 +62,99 @@ To unify this even further, we would like to get rid of the quantifiers on \(\va
 \end{lemma}
 
 \begin{proof}
-  \todo{TODO.}
+  \todo{\ok Finish the proof.}
+  Firstly, \(Y \in f_*\cF\) as \(f^{-1}(Y) = X \in \cF\). Next, let \(U \in f_*\cF\) and \(V \supset U\). Then, \(f^{-1}(V) \supset f^{-1}(U)\). Since \(f^{-1}(U) \in \cF\), by superset rule we have \(f^{-1}(V) \in \cF\), yielding \(V \in f_*\cF\). Finally, suppose that \(U, V \in f_*\cF\). Then, \(f^{-1}(U \cap V) = f^{-1}(U) \cap f^{-1}(V)\), as \(a \in f^{-1}(U \cap V) \iff f(a) \in U \cap V \iff f(a) \in U \land f(a) \in V \iff a \in f^{-1}(U) \land a \in f^{-1}(V)\). Hence, \(f^{-1}(U \cap V) \in \cF\) by intersection rule of \(\cF\), meaning \(U \cap V \in f_*\cF\).
 \end{proof}
 
 The discussion above then motivates the following definition:
 
 \begin{definition}[Limits along filters 1]
-  Let \(X, Y\) be spaces, \(f : X \to Y\) be a function, \(y_0 \in Y\) be a point, and \(\cF \subseteq \mathcal{P}(X)\) be a filter on \(X\). Then, we say that \(f\) \textbf{tends to} \(y_0\) \textbf{along the filter} \(\cF\) if \(f_*\cF \leq \mathcal{N}_Y\).
+  Let \(X, Y\) be spaces, \(f : X \to Y\) be a function, \(y_0 \in Y\) be a point, and \(\cF \subseteq \mathcal{P}(X)\) be a filter on \(X\). Then, we say that \(f\) \textbf{tends to} \(y_0\) \textbf{along the filter} \(\cF\) if \(f_*\cF \leq \mathcal{N}_{y_0}\).
 \end{definition}
 
+However, sometimes convergence to a point is not sufficient, such as when describing \(\lim_{x \to x_0} f(x) = +\infty\). Hence, the correct generality of limits should also have any filter instead of \(\mathcal{N}_{y_0}\), cumulating in the following general form of limits along filters:
 
+\begin{definition}[Limits along filters 2]
+  Let \(X, Y\) be spaces, \(f : X \to Y\) be a function, and \(\cF, \cG\) be filters of \(X, Y\) respectively. Then, we say that \(f\) \textbf{tends to} \(\cG\) \textbf{along the filter} \(\cF\) if \(f_*\cF \leq \cG\).
+\end{definition}
 
-\subsection{Lean 101: Proving a Limit}
-\todo{Walkthrough the formalisation of the proof of \(\lim_{x \to \infty} \frac{1}{1 + x} = 0\), since this basically comes up later on.}
+Of course, we should verify that these are equivalent to the traditional definition of limits. We will verify it for the first definition in the following case:
 
+\begin{ttheorem}
+  Let \(f : \R \to \R\) be a function where \(\lim_{x \to x_0} f(x)\) exists. Then, \(\lim_{x \to x_0} f(x) = c\) if and only if \(f_*\mathcal{N}_{x_0} \leq \mathcal{N}_c\).
+\end{ttheorem}
+
+\begin{proof}
+  (\implies): Suppose that \(\lim_{x \to x_0} f(x) = c\). Then, \(\forall \varepsilon > 0, \exists \delta > 0, f(\mathcal{B}_{\delta}(x_0)) \subseteq \mathcal{B}_{\varepsilon}(c)\). Let \(S \in \mathcal{N}_c\). Then, \(\exists \varepsilon > 0, \mathcal{B}_{\varepsilon}(c) \subseteq S\). For such \(\varepsilon\), there exists \(\delta > 0\) such that \(f(\mathcal{B}_{\delta}(x_0)) \subseteq \mathcal{B}_{\varepsilon}(c) \subseteq S\). Hence, \(\mathcal{B}_{\delta}(x_0) \subseteq f^{-1}(S)\). Since \(\mathcal{B}_{\delta}(x_0) \in \mathcal{N}_{x_0}\), by the superset property of filters, \(f^{-1}(S) \in \mathcal{N}_{x_0}\), meaning that \(S \in f_*\mathcal{N}_{x_0}\).
+
+  (\impliedby): Suppose that \(f_*\mathcal{N}_{x_0} \leq \mathcal{N}_c\). By definition, for every neighbourhood \(S\) of \(c\), \(f^{-1}(S) \in \mathcal{N}_{x_0}\). Fix \(\varepsilon > 0\). Then, \(\mathcal{B}_{\varepsilon}(c)\) is a neighbourhood of \(c\), meaning that \(f^{-1}(\mathcal{B}_{\varepsilon}(c)) \in \mathcal{N}_{x_0}\). In particular, it implies that \(f^{-1}(\mathcal{B}_{\varepsilon}(c)\) is open and contains \(x_0\), meaning there exists \(\delta > 0\) such that \(\mathcal{B}_{\delta}(x_0) \subseteq f^{-1}(\mathcal{B}_{\varepsilon}(c)\). Hence, \(f(\mathcal{B}_{\delta}(x_0) \subseteq \mathcal{B}_{\varepsilon}(c)\), which is equivalent to \(\lim_{x \to x_0} f(x) = c\).
+\end{proof}
+
+\subsection{Mathlib 101: Proving a Limit}
+\todo{\ok Walkthrough the formalisation of the proof of \(\lim_{x \to \infty} \frac{1}{x} = 0\) as a basic example of limits.}
+
+In this section, we show what the formalisation of \(\lim_{x \to \infty} \frac{1}{x} = 0\) looks like in Lean (with Mathlib), and how a proof of it is constructed. To begin we have to import definitions from several files within Mathlib. We also have to \mintinline{lean}{open} \textit{namespaces} so that we only have to type \mintinline{lean}{inv_tendsto_atTop} instead of \mintinline{lean}{Filter.Tendsto.inv_tendsto_atTop}, for example.
+
+\begin{minted}{lean}
+import Mathlib.Order.Filter.Basic
+import Mathlib.Topology.Instances.Real
+
+open Filter Tendsto Topology
+\end{minted}
+
+To write down the statement \(\lim_{x \to \infty} \frac{1}{x} = 0\) in Lean, we first have to translate it into the language of filters. Writing \(f : \R \to \R\) for \(f(x) = \frac{1}{x}\), the filter definition of limits give \(f_*\mathcal{N}_{+\infty} \leq \mathcal{N}_0\). In Lean, there is a slightly higher level definition called \mintinline{lean}{Tendsto}, which expresses the statement that ``\(f\) tends to \(\cG\) along \(\cF\)''. For our statement, we can write\footnote{There is a notation for \mintinline{lean}{nhds}, but my \LaTeX fonts don't support it, so we will stick with \mintinline{lean}{nhds} instead.}
+
+\begin{minted}{lean}
+example : Tendsto (fun x : ℝ ↦ 1 / x) atTop (nhds 0) := by
+\end{minted}
+
+To break this line down:
+
+\begin{itemize}
+  \item The starting \mintinline{lean}{example : } is an indicator for the start of a new statement;
+  \item \mintinline{lean}{Tendsto} takes three arguments \(f, \cF, \cG\) in that order, and express \(f \stackrel{\cF}{\longrightarrow} \cG\);
+  \item \mintinline{lean}{fun ... ↦ ...} is Lean 4's syntax for the lambda functions \(\lambda x. f x\);
+  \item \mintinline{lean}{atTop} is the filter \(\mathcal{N}_{+\infty}\); and
+  \item \mintinline{lean}{nhds 0} is the neighbourhood filter \(\mathcal{N}_0\).
+\end{itemize}
+
+To prove this result, we can first prove that \(\lim_{x \to \infty} x = +\infty\), from which we (informally) have \(\frac{1}{+\infty} = 0\) as limits. We can indicate this ``intermediate goal'' as follows:
+
+\begin{minted}{lean}
+example : Tendsto (fun x : ℝ ↦ 1 / x) atTop (nhds 0) := by
+  have : Tendsto (fun x : ℝ ↦ x) atTop atTop := by
+    ...
+  ...
+\end{minted}
+
+Here we used the \mintinline{lean}{have} keyword, which acts similar to the \mintinline{lean}{example} keyword, except that it works within the proof. As one would imagine, the proof for the intermediate goal is not difficult, though explaining the details would derail us from the intended goal. Instead, here I present my proof for the entire statement:
+
+\begin{minted}{lean}
+example : Tendsto (fun x : ℝ ↦ 1 / x) atTop (nhds 0) := by
+  have : Tendsto (fun x : ℝ ↦ x) atTop atTop := by
+    intro _ a
+    exact a
+  simpa [one_div] using this.inv_tendsto_atTop
+\end{minted}
+
+Here, \mintinline{lean}{simpa} (which stands for ``\textbf{simp}lification + \textbf{a}ssumption'') is a powerful tactic within Mathlib that allows attempting to closing a goal via a powerful automatic theorem proving algorithm. This tactic is not in Lean 4 itself, meaning that without Mathlib, such a powerful tactic would not be available for use in proofs. This is another reason why Mathlib might be useful for proofs, even if they don't involve mathematics.
+
+\subsection{Asymptotics} \label{def:asympt}
+
+Intuitively, asymptotics are similar in concept to limits, so it is not surprising that asymptotic notations can also be unified under filters. First we define the notion of \textit{eventuality}:
+
+\begin{definition}
+  Let \(X\) be a space, \(\cF\) be a filter on \(X\) and \(p : X \to \mathbf{Prop}\) be a predicate. We say that \(p\) holds true \textbf{eventually} along the filter \(\cF\), denoted \(\forall^f x \in \cF, p(x)\), if \(\{x \in X : p(x)\} \in \cF\).
+\end{definition}
+
+\begin{example}
+  Take \(X = \R\) and \(\cF = \mathcal{N}_{+\infty}\). Then, \(p\) holds true eventually along \(\mathcal{N}_{+\infty}\) if and only if \(\{x \in X : p(x)\} \in \mathcal{N}_{+\infty}\), which is when \(\{x \in X : p(x)\}\) contains an interval \([A, +\infty)\) for some \(A \in \R\). This matches the informal definition of eventually.
+\end{example}
+
+With this, we can define the big-\(O\) notation and the little-\(O\) notation. These are more general than the typical definition, where \(f(x) \in O(g(x))\) requires \(f\) and \(g\) to have the same codomain.
+
+\begin{definition}[Big-\(O\) and little-\(o\) notations]
+  Let \(X\) be any space, \(Y, Z\) be two normed spaces, and \(\cF\) be a filter on \(X\). Further let \(f : X \to Y\) and \(g : X \to Z\) be two functions. We say \(f = O_{\cF}(g)\), or simply \(f = O(g)\) (usually when \(\cF = \mathcal{N}_{+\infty}\)), if there exists \(c \in \R\) such that \(\forall^f x \in \cF, \|f(x)\| \leq c\|g(x)\|\). We say \(f = o_{\cF}(g)\), or simply \(f = o(g)\), if for all positive real \(c\), \(\forall^f x \in \cF, \|f(x)\| \leq c\|g(x)\|\).
+\end{definition}
+
+It is worth mentioning that often times, one does not strictly write equations in the form \(f(x) = O(g(x))\). For example, it is understood that \(x^5 + 2x + 1 = x^5 + O(x)\) along the filter \(\mathcal{N}_{+\infty}\). What this is actually saying is that \(\exists f \in O_{\cF}(x)\) such that \(\forall^f x \in \cF, x^5 + 2x + 1 = x^5 + f(x)\).

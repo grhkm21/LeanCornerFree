@@ -1,3 +1,12 @@
-\section{Implementation: Connecting the Dots}
+\section{Implementation: Bridging the Parts} \label{sec:impl_bridge}
 \todo{Words}
 
+Going into the project, the bridge was projected to be by far the easiest, but that estimation was incorrect. To demonstrate the issue, consider a triangle with \(A = 1 + 2 + \cdots + \lfloor\frac{q}{2}\rfloor = \lfloor\frac{\lfloor\frac{q}{2}\rfloor\left(\lfloor\frac{q}{2}\rfloor + 1\right)}{2}\rfloor\) lattice points. We would like to obtain its highest order terms i.e. \(A = \frac{q^2}{8} + O(q)\). As it turns out, this is quite hard. One method considered during the project was to use the rough bound \(\frac{q - k}{k} \leq \lfloor \frac{q}{k} \rfloor\), arriving at the following:
+
+\begin{minted}{lean}
+example {b : ℤ} (hb : 2 ≤ b) :
+    (((b - 2 : ℚ) / 2) * ((b - 2 : ℚ) / 2 - 1) - 2) / 2 ≤ ((b / 2) * (b / 2 - 1) / 2 : ℤ) := by
+  sorry /- left unproven -/
+\end{minted}
+
+However, this leads to an interesting question: how do we know whether the statement written down is correct?

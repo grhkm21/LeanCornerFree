@@ -3,7 +3,7 @@
 \addbibresource{local.bib}
 
 % instruct minted to use our local theorem.py
-\usepackage{minted}
+\usepackage[outputdir=build]{minted}
 \usemintedstyle{tango}  % a nice, colorful theme
 \setminted[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
 \setmintedinline[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
@@ -20,7 +20,8 @@
 \begin{document} \maketitle
 
 \begin{abstract}
-  \todo{Placeholder.}~\cite{GreenTao12} \lipsum[1]
+  % \todo{Placeholder.}~\cite{GreenTao2008} \lipsum[1]
+  For my third year project, I formalised Ben Green's recent construction of large corner-free sets ~\cite{Green2021} in the Lean 4 Theorem Prover. My formalisation can be found at \href{https://github.com/grhkm21/LeanCornerFree/tree/master}. This essay complements the project by explaining what mathematical formalisation actually is, and my contribution throughout the project.
 \end{abstract}
 
 \tableofcontents
@@ -28,19 +29,19 @@
 %% TODO: Remove this
 \pagebreak
 
-\include{sec1-intro}
+% \include{sec1-intro}
 \include{sec2-background}
 \include{sec3-lean-and-mathlib}
 \include{sec4-limits}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% \include{sec5-behrend-3ap-proof}
-% \include{sec6-green-corner-proof}
-% \include{sec7-impl-construction}
-% \include{sec8-impl-asymptotics}
-% \include{sec9-impl-bridge}
-% \include{sec10-correctness} % also give *nonexamples*
+\include{sec5-behrend-3ap-proof}
+\include{sec6-green-corner-proof}
+\include{sec7-impl-construction}
+\include{sec8-impl-asymptotics}
+\include{sec9-impl-bridge}
+\include{sec10-correctness} % also give *nonexamples*
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

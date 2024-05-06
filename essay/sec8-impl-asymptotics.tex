@@ -1,3 +1,137 @@
-\section{Implementation: Asymptotics}
+\section{Implementation: Asymptotics} \label{sec:impl_asymptotics}
 \todo{Describe the implementation of the asymptotics proof (\texttt{cp.lean} and \texttt{cp2.lean}) in detail.}
 
+As shown back in~\cref{lemma:asympt}, simplifying the asymptotics expressions is tedious and involves rearranging massive terms and moving asymptotics terms in and out, and there are many lemmas that went into proving the asymptotics simplification in the paper. Here, we demonstrate the issues we faced and tricks we discovered during the formalisation process through two examples.
+
+\subsection{Approximating Powers}
+
+\begin{theorem}{}{}
+  Fix \(c \geq 1\). Prove that \(c^d + 1 = (c + o(1))^d\) as \(d : \N \to \infty\).
+\end{theorem}
+
+To make the problem more interesting, I tried to prove it without resorting to the closed form for the \(o(1)\) term. Firstly, let's state this within Lean. Following the discussion under~\cref{def:asympt}, we formalise the theorem statement as follows:
+
+\begin{minted}{lean}
+lemma aux' (c : ℝ) (hc : 1 ≤ c) :
+    ∃ f : ℕ → ℝ, f =o[atTop] (1 : ℕ → ℝ) ∧ (∀ᶠ d in atTop, c ^ d + 1 = (c + f d) ^ d) := by
+\end{minted}
+
+The proof idea is to observe that the ``correct'' solution satisfies \(0 \leq f(d) \leq \frac{1}{cd}\) by Bernoulli's inequality. However, there are also false solutions to \(c^d + 1 = (c + f(d))^d\) that we do not want, such as when taking \(\overline{f}(d) = -2c - f(d)\) for even \(d\). In the end, I split the proof of the theorem into two independent steps:
+
+\begin{enumerate}
+  \item There exists a function \(f : \N \to \R\) where \(f \geq 0\) and \(\forall^f d \in \mathcal{N}_{+\infty}, c^d + 1 = (c + f(d))^d\).
+  \item For all functions \(f : \N \to \R\) where \(f \geq 0\) and \(\forall^f d \in \mathcal{N}_{+\infty}, c^d + 1 = (c + f(d))^d\), we have \(f = o(1)\).
+\end{enumerate}
+
+For (1), the approach taken is to use continuity of \(x \mapsto x^d\), along with the fact that \(c^d \leq c^d + 1 \leq c^d + cd \leq (c + 1)^d\). The statement as well as the proof is shown below. In particular, continuity of \(x \mapsto x^d\) is proven by \mintinline{lean}{continuousOn_pow} and is used in \mintinline{lean}{intermediate_value_Icc}.
+
+Note that instead of \(\forall^f d \in \mathcal{N}_{+\infty}\), I explicitly put \(\forall d \geq 1\). Clearly, if \(\forall d \geq 1, p(d)\), then \([1, +\infty) \subseteq \{d : p(d)\}\), and so \(\{d : p(d)\} \in \mathcal{N}_{+\infty}\). Also, I am pretty sure the \mintinline{lean}{Classical.choose} call is not needed, but hey, if it works, it works.
+
+\begin{minted}{lean}
+lemma aux_part1 (c : ℝ) (hc : 1 ≤ c) :
+    ∃ f : ℕ → ℝ, 0 ≤ f ∧ (∀ d, 1 ≤ d → c ^ d + 1 = (c + f d) ^ d) := by
+  suffices ∀ d : ℕ, 1 ≤ d → ∃ f : ℝ, f ≥ 0 ∧ c ^ d + 1 = (c + f) ^ d by
+    use fun d ↦ if hd : 1 ≤ d then Classical.choose (this d hd) else 0
+    constructor
+    · intro d
+      simp only [Pi.zero_apply]
+      by_cases hd : 1 ≤ d <;> simp only [hd, dite_true, dite_false]
+      · exact (Classical.choose_spec (this d hd)).left
+      · rfl
+    · intro d hd
+      simp only [hd, dite_true]
+      exact (Classical.choose_spec (this d hd)).right
+  intro d hd
+  have h₁ : c ^ d ≤ c ^ d + 1 := (lt_add_one _).le
+  have h₂ : c ^ d + 1 ≤ (c + 1) ^ d := by
+    refine (add_le_add_left (Nat.one_le_cast.mpr hd) (c ^ d)).trans ?_
+    convert pow_add_mul_self_le_pow_one_add d hc zero_le_one
+    rw [mul_one]
+  have := intermediate_value_Icc (lt_add_one c).le (continuousOn_pow d)
+  obtain ⟨f, ⟨hf₁, hf₂⟩⟩ := this (mem_Icc.mpr ⟨h₁, h₂⟩)
+  use f - c, ?_, ?_
+  · rw [ge_iff_le, sub_nonneg]
+    exact (mem_Icc.mp hf₁).left
+  · beta_reduce at hf₂
+    rw [← add_sub_assoc, add_sub_cancel_left, hf₂]
+\end{minted}
+
+For (2), we note that \((c + f(d))^d = c^d + 1 \leq \left(c + \frac{1}{d}\right)^d\), so \(f(d) \leq \frac{1}{d}\). This combined with \(f \geq 0\) shows that \(f = o(1)\). The proof is given below. Notice that the two (outer) \mintinline{lean}{have} clauses are precisely what we stated in the previous sentence. This is a common theme in formalising proofs, where \mintinline{lean}{have} statements can be used to ``signpost'' what the big picture of the proof looks like.
+
+\begin{minted}{lean}
+lemma aux_part2 (c : ℝ) (hc : 1 ≤ c) :
+    ∀ f : ℕ → ℝ, (0 ≤ f ∧ ∀ d, 1 ≤ d → c ^ d + 1 = (c + f d) ^ d) → (f =o[atTop] (1 : ℕ → ℝ)) := by
+  intro f ⟨hf₁, hf₂⟩
+  have {d} (hd : 1 ≤ d) : (c + f d) ^ d ≤ (c + 1 / (d : ℝ)) ^ d := by
+    rw [← hf₂ d hd]
+    have : c + 1 / (d : ℝ) = c * (1 + 1 / (c * d : ℝ)) := by
+      rw [mul_add, mul_one, div_mul_eq_div_div, mul_div, mul_one_div_cancel (by linarith)]
+    convert pow_add_mul_self_le_pow_one_add d hc ?_
+    · rw [mul_one_div_cancel (by positivity)]
+    · norm_num
+
+  have : ∀ᶠ d in atTop, ‖f d‖ ≤ ‖1 / (d : ℝ)‖ := by
+    simp_rw [norm_eq_abs, eventually_atTop]
+    refine ⟨1, fun d hd ↦ ?_⟩
+    specialize this hd
+    rw [abs_eq_self.mpr (hf₁ _), abs_eq_self.mpr (by norm_num)]
+    contrapose! this
+    gcongr
+
+  refine IsBigO.trans_isLittleO (IsBigO.of_bound' this) ?_
+  simp_rw [Pi.one_def, isLittleO_iff, eventually_atTop, norm_div, norm_one, mul_one,
+    RCLike.norm_natCast]
+  intro c hc
+  use max 1 ⌈1 / c⌉₊
+  intro b hb
+  refine (one_div_le ?_ hc).mpr ?_
+  · exact Nat.cast_pos.mpr (le_of_max_le_left hb)
+  · exact Nat.ceil_le.mp (le_of_max_le_right hb)
+\end{minted}
+
+\subsection{Simplifying \(d\)}
+
+The second example we will look at is the following simplification steps from~\cref{lemma:asympt}.
+
+\[
+  \sqrt{\frac{\log N}{\log(c + o(1))}} = \sqrt{\frac{\log N}{\log c + o(1)}} = \sqrt{\frac{\log N}{\log c} + o(1)} = \left(\sqrt{\frac{1}{\log_2 c}} + o(1)\right)\sqrt{\log_2 N}
+\]
+
+Each equality step is almost trivial to mathematicians, but formalising them takes a surprisingly large amount of effort. For example, consider the first equality, which boils down to proving \(\log(c + o(1)) = \log c + o(1)\) (where \(1 < c\)). Using the filters language, for every \(f(x) \in o(1)\) we want to find \(g(x) \in o(1)\) such that \(\log(c + f(x)) =^f \log c + \log g(x)\), where \(=^f\) is a short hand for eventually always equal. This is easy, as we simply take \(g(x) = 1 + \frac{f(x)}{c}\). However, what follows is the difficult part: proving \(\log(c + f(x)) =^f \log(c) + \log\left(1 + \frac{f(x)}{c}\right)\). In particular, the sum of \(\log\) formula will fail when \(f(x) \leq -c\), so it requires some manuevering to prove the following lemma:
+
+\begin{minted}{lean}
+example {c : ℝ} (hc : 1 < c) (f : ℕ → ℝ) (hf : f =o[atTop] (fun _ ↦ 1 : ℕ → ℝ)) :
+    (fun N : ℕ ↦ log (c + f N)) =ᶠ[atTop] (fun N : ℕ ↦ log c + log (1 + f N / c)) := by
+  rw [isLittleO_one_iff, atTop_basis.tendsto_iff (nhds_basis_Ioo_pos _)] at hf
+  obtain ⟨N, ⟨_, hN⟩⟩ := hf c (zero_lt_one.trans hc)
+  rw [EventuallyEq, eventually_atTop]
+  use N
+  intro b hb
+  rw [← log_mul, mul_add, mul_div_cancel₀, mul_one]
+  · linarith
+  · linarith
+  · /- 1 + f b / c ≠ 0 -/
+    have : -c < f b := (zero_sub c) ▸ (Set.mem_Ioo.mp (hN b hb)).left
+    have : -c / c < f b / c := by gcongr
+    have hc : c ≠ 0 := by linarith
+    rw [neg_div, (div_eq_one_iff_eq hc).mpr rfl] at this
+    linarith
+\end{minted}
+
+The key to this proof (and the other two equalities) is to recall that \(f = o(1) \iff \lim f = 0\). This simple observation turns the equalities from complicated \textit{asymptotic} big-\(O\) notations to \textit{limit} problems, which are significantly easier. More specifically, the first line of \mintinline{lean}{rw} rewrites \(f = o(1)\) into \(\lim f = 0\), then converts it into the \(\varepsilon-\delta\) definition. The final ``bulletpoint'' is trying to prove \(1 + f(b) / c \neq 0\) when \(b\) is large enough, and everything in between is extracting the correct hypotheses.
+
+A slightly more interesting example is the second equality, which reduces to proving \(\frac{1}{1 + o(1)} = 1 + o(1)\). Instead of converting every \(o(1)\) into explicit functions, we can instead rearrange first to get \(\frac{1}{1 + o(1)} - 1 = o(1)\) as our goal state. This is equivalent to proving that for \(f(x) \to 0\), \(\frac{1}{1 + f(x)} - 1 \to 0\), which is again trivial. Although Mathlib does not yet have a tactic for directly substituting limits, one can still prove the result pretty easily. The proof given below has excessive number of \mintinline{lean}{have} statements just for clarity.
+
+\begin{minted}{lean}
+example {f : ℕ → ℝ} (hf : f =o[atTop] (fun _ ↦ 1 : ℕ → ℝ)) :
+    ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ)
+      ∧ (fun N ↦ 1 / (1 + f N)) =ᶠ[atTop] (fun N ↦ 1 + g N) := by
+  use fun N ↦ 1 / (1 + f N) - 1
+  constructor
+  · rw [isLittleO_one_iff] at hf ⊢
+    have h₁ : Tendsto (fun N ↦ 1 + f N)         atTop (nhds (1 + 0))         := hf.const_add 1
+    have h₂ : Tendsto (fun N ↦ (1 + f N)⁻¹)     atTop (nhds (1 + 0)⁻¹)       := h₁.inv₀ (by simp)
+    have h₃ : Tendsto (fun N ↦ (1 + f N)⁻¹ - 1) atTop (nhds ((1 + 0)⁻¹ - 1)) := h₂.sub_const 1
+    simpa using h₃
+  · simp
+\end{minted}

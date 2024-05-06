@@ -1,7 +1,85 @@
-\section{Correctness via \texttt{eval}}
-\subsection{Computability typeclasses}
+\section{Correctness via \texttt{eval}} \label{sec:correctness}
 % Useful: https://leanprover.github.io/theorem_proving_in_lean/type_classes.html
 
+After a formal proof has been formalised in a theorem prover, there is still the question of ``does this proven statement \textit{really} correspond to the claimed statement on paper?'' This section aims to give several ways to boost such confidence.
 
+\subsection{Decidability typeclasses}
 
-\subsection{?}
+In usual mathematics, most statements are either \texttt{True} or \texttt{False}. However, it is not always possible, even with a computer, to determine which one it is. To distinguish the statements that \textit{can} be decided, Lean has a typeclass instance called \mintinline{lean}{Decidable}. The definition of \mintinline{lean}{Decidable} makes it clear what the typeclass represents:
+
+\begin{minted}{lean}
+class inductive Decidable (p : Prop) where
+  /-- Prove that `p` is decidable by supplying a proof of `¬p` -/
+  | isFalse (h : Not p) : Decidable p
+  /-- Prove that `p` is decidable by supplying a proof of `p` -/
+  | isTrue (h : p) : Decidable p
+\end{minted}
+
+For example, consider the following proposition that checks whether \(n\) is a square.
+
+\begin{minted}{lean}
+import Mathlib.Data.Nat.Parity
+
+def MyIsSquare (n : ℕ) : Prop := ∃ k : ℕ, n = k ^ 2
+\end{minted}
+
+Without any extra lemmas, \mintinline{lean}{MyIsSquare} is currently non-\mintinline{lean}{Decidable}. To see this, imagine a computer trying to decide\footnote{In other words, ``evaluate'' the \textbf{Prop} to either \texttt{True} or \texttt{False}.} whether \mintinline{lean}{MyIsSquare 37} holds. The only way it can do so is by testing natural numbers \(k\) incrementally, and halting if \(n = k ^ 2\) is met. This never happens for \(n = 37\), so the computer will run infinitely. Indeed, Lean does not accept this as a \mintinline{lean}{Decidable} predicate:
+
+\begin{minted}{lean}
+instance : DecidablePred MyIsSquare := by infer_instance /- fails -/
+\end{minted}
+
+However, we can make the lemma \mintinline{lean}{Decidable} by adding a lemma, telling the computer that the candidates \(k\) can only go up to a finite bound:
+
+\begin{minted}{lean}
+lemma MyIsSquare_iff_bounded {n : ℕ} : MyIsSquare n ↔ ∃ k : ℕ, k ≤ n ∧ n = k ^ 2 := by sorry
+
+instance : DecidablePred MyIsSquare := by
+  intro n
+  simp_rw [MyIsSquare_iff_bounded]
+  /- ⊢ Decidable (∃ k ≤ n, n = k ^ 2) -/
+  infer_instance
+-/
+\end{minted}
+
+The advantage of proving \mintinline{lean}{Decidable} instances is that it allows the Lean kernel to act as the ``computer'' and verify computations for you. For example, we can now type
+
+\begin{minted}{lean}
+#eval MyIsSquare 36 /- true -/
+#eval MyIsSquare 37 /- false -/
+\end{minted}
+
+In this project, most objects (such as \mintinline{lean}{MulCornerFree}) are carefully defined to be \mintinline{lean}{Decidable}. Hence, one can verify the construction \(X\) is correct by typing
+
+\begin{minted}{lean}
+#eval (A (d := 2) (q := 4) 5)
+/-
+{(![0, 1], ![2, 2]),
+ (![0, 2], ![2, 1]),
+ (![1, 0], ![2, 2]),
+ (![1, 2], ![2, 0]),
+ (![2, 0], ![1, 2]),
+ (![2, 1], ![0, 2]),
+ (![2, 2], ![0, 1]),
+ (![2, 2], ![1, 0])}
+-/
+
+#eval (A (d := 2) (q := 4) 5).map VecPairToInt
+/-
+{(3, 8), (6, 5), (1, 8), (7, 2), (2, 7), (5, 6), (8, 3), (8, 1)}
+-/
+
+#eval AddCornerFree ((A (d := 2) (q := 5) 5).map VecPairToInt : Set (ℤ × ℤ))
+/-
+true
+-/
+\end{minted}
+
+\subsection{Random Testing via \mintinline{lean}{slim_check}}
+
+Another option for verifying whether the formalised objects are correct would be the \mintinline{lean}{slim_check} tactic from Mathlib. It is simple to use:
+
+\begin{minted}{lean}
+example {a b : ℤ} : (a / b - 1 : ℚ) ≤ (a / b : ℤ) := by
+  slim_check /- Successful -/
+\end{minted}

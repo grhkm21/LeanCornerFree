@@ -1,4 +1,4 @@
-\section{Lean for the Working Mathematician \protect\footnote{Mac Lane would be proud.}}
+\section{Lean for the Working mathematician \protect\footnote{Mac Lane would be proud.}}
 
 Formally, Lean is an interactive theorem prover based on a Martin-Löf (dependent) Type Theory (MLTT)~\cite{MartinLöf1984}. This section aims to give a short introduction to the theory and how it works as the theory underlying a theorem prover. For an in-depth exposition of the theory, the reader is advised to consult~\cite{Rijke2022}.
 
@@ -8,7 +8,7 @@ Formally, Lean is an interactive theorem prover based on a Martin-Löf (dependen
 This is a summary of type theory, from the perspective of a practitioner. \footnote{I am omitting many details, such as universes, contexts, equality types etc. for brevity.}
 
 \begin{gtheorem*}
-  \textbf{Type theory} aims to be an alternative foundation for Mathematics, in place of the traditional set theory. It consists of \textit{elements} and \textit{types}, along with a set of \textit{inference rules} which corresponds to axioms from logic and set theory.
+  \textbf{Type theory} aims to be an alternative foundation for mathematics, in place of the traditional set theory. It consists of \textit{elements} and \textit{types}, along with a set of \textit{inference rules} which corresponds to axioms from logic and set theory.
 \end{gtheorem*}
 
 Examples of \textit{elements} include the integer \(3\), the propositions ``\(P \coloneqq 1 = 2\)'', ``\(Q \coloneqq \forall x \in \Z, 2x \in \mathrm{Even}\)'', the sets \(\Q\) and \(\{2, 3, 5\}\). These each have a type. For example, \(3\) belongs to the type \(\mathbf{Nat}\), the type of natural numbers, and we denote this by a \textit{judgement} \(\goal 3 : \mathbf{Nat}\) (the \(\goal\) indicates the start of a judgement, and we shall omit it when it is clear). There is also a type for all nice\footnote{First-order logical propositions should suffice.} propositions called \textbf{Prop}, and we may write \(P, Q : \mathbf{Prop}\). The types of \(\Q\) and \(\{2, 3, 5\}\) can be \textbf{NumberField} and \textbf{Set} \(\Z\), which are the types for number fields and sets of integers respectively.
@@ -17,9 +17,15 @@ Examples of \textit{elements} include the integer \(3\), the propositions ``\(P 
 
 Note that the ``colon relation'' \(x : X\) is not transitive. For example, \(2 : \N\) and \(\N : \mathrm{Type}\) are valid judgements, but not \(2 : \mathrm{Type}\).
 
-An important class of elements is the functions. \todo{add some stuff here. I want the notation \(T_1 \to T_2\).}
+\todo{\ok add some stuff here. I want the notation \(T_1 \to T_2\).}
 
-As the reader might have noticed, we have not done anything truly innovative. In fact, all concepts above naturally correspond to concepts from set theory. Types can be thought of as a collection of things, just like sets, and \(x : X\) can be thought of as alternative notation for \(x \in X\).
+An important class of elements is the class of (independent) functions. We are all familiar with such subjects: for \(A\) and \(B\), suppose that for every \(a : A\) we have a corresponding term \(b(a) : B\). Then, we can construct a \textit{function} \(f : A \to B\), which is an element with a ``computation rule'' or ``application rule'': given an element \(a : A\), we can apply \(f\) on \(a\) to get \(f(a) \coloneqq b(a)\).
+
+However, this is often too restrictive for a type theory. For example, consider the \textit{type function} (a function of types) \(\mathrm{Vec}\) that sends natural numbers \(n : \N\) to the \(\mathbf{Vec}_n\), the type of all length-\(n\) vectors. The type of this element would be of the form \(\N \to *\), but we cannot describe \(*\) in a satisfactory way; sure, we can say \(\mathrm{Vec} : \N \to \mathbf{Vec}\), the type of all vectors of any length, but that loses information about the type. For example, we cannot compose \(\mathrm{Vec}\) with \(\mathrm{Dup}_n : \mathbf{Vec}_n \to \mathbf{Vec}_{2n}\).
+
+This motivates the notion of \textit{dependent function types}. As its name suggests, it is a function type where the codomain type depends on the argument from the domain. More rigorously, consider a type family \(B\) over \(A\), i.e. a collection of types \(B(x) : \mathbf{Type}\) for every \(a : A\), as well as elements \(b(a) : B(a)\) for every \(a : A\). We can define a \textbf{dependent type} \(\prod_{(x : A)} B(x)\), and a \textbf{dependent function} of such type \(f : \prod_{(x : A)} B(x)\), which satisfies the computation rule \(f(a) \coloneqq b(a)\).
+
+It is important to note that we have not done anything innovative. In fact, all concepts above naturally correspond to concepts from set theory. Types can be thought of as a collection of things, just like sets, and \(x : X\) can be thought of as alternative notation for \(x \in X\). Independent functions even have the same notation as their set-theoretic counterparts!
 
 We now turn to the \textit{inference rules}, which are axioms within the type theory that determine how elements and types interact. Here is an inference rule that represents type substitution:
 
@@ -63,13 +69,13 @@ As we will see in the next sections, it plays a fundamental role in how theorem 
 We shall not continue in this direction of type theory, as it quickly ventures into details of type theory that we will not need to understand Lean. The interested reader can refer to~\cite{Rijke2022} for a detailed resource on the topic.
 
 \subsection{The Curry-Howard Correspondence} \label{sec:ch-correspondence}
-\todo{\ok Connect Lean with Mathlib: as demonstrated above, there is a strong relation betwen Mathematical proofs and typed expressions.}
+\todo{\ok Connect Lean with Mathlib: as demonstrated above, there is a strong relation betwen mathematical proofs and typed expressions.}
 
-We have seen how the constructors of \(\N\) are expressed in formal type theory language, and also how our intuition on equalities translate to type theoretical language. This suggests there is a strong relation between Mathematical proofs and typed terms, and indeed there is, via the \textit{Curry-Howard correspondence}.
+We have seen how the constructors of \(\N\) are expressed in formal type theory language, and also how our intuition on equalities translate to type theoretical language. This suggests there is a strong relation between mathematical proofs and typed terms, and indeed there is, via the \textit{Curry-Howard correspondence}.
 
 Recall that a type \(T\) can vaguely be thought of as a set \(X_T\) containing all elements of that type. For example, when \(T = \N\), the set \(X_{\N}\) is, well, just \(\N = \{0, 1, 2, \cdots\}\). What about when \(T = (2 + 2 = 4)\)? The set \(X_T\) will be the set of all elements of type \(T\), i.e. \(X_T = \{x : T\}\). One interpretation of such elements \(x \in X_T\) is that they are \textit{proofs} of the proposition \(T\).
 
-To make this interpretation meaningful, further suppose that we have a term \(f : T \to T'\), where \(T' = (2 + 2) + 1 = 4 + 1\), where informally, the term \(f\) simply adds \(1\) to both sides of an equality. By the inference rule for function applications, we can use \(x : T\) and \(f : T \to T'\) to construct \(f(x) : T'\). In particular, if we interpret terms \(x : T\) and \(f(x) : T'\) as proofs of the propositions \(T\) and \(T'\) respectively, then \(f : T \to T'\) serves not just as a function, but also a ``proof step'' in a Mathematical proof; for ``proof steps'' we mean theorems, lemmas, claims or algebraic steps that appear in a normal Mathematical proof on paper.
+To make this interpretation meaningful, further suppose that we have a term \(f : T \to T'\), where \(T' = (2 + 2) + 1 = 4 + 1\), where informally, the term \(f\) simply adds \(1\) to both sides of an equality. By the inference rule for function applications, we can use \(x : T\) and \(f : T \to T'\) to construct \(f(x) : T'\). In particular, if we interpret terms \(x : T\) and \(f(x) : T'\) as proofs of the propositions \(T\) and \(T'\) respectively, then \(f : T \to T'\) serves not just as a function, but also a ``proof step'' in a mathematical proof; for ``proof steps'' we mean theorems, lemmas, claims or algebraic steps that appear in a normal mathematical proof on paper.
 
 To give another example, let us prove the transitivity of implications from classical logic, i.e. that for propositions \(P, Q, R\), if \(P\) implies \(Q\) and \(Q\) implies \(R\), then \(P\) implies \(R\). Through the Curry-Howard correspondence, it suffices to construct a term of type \(P \to R\), given terms \(h_1 : P \to Q\) and \(h_2 : Q \to R\). The term desired can be constructed by \(h_2 \circ h_1\), or more explicitly, by the term \(f : P \to R\) given by \(f(p) = h_2(h_1(p))\). In the language of inference rules, it can be written as follows~\label{ch-tree}:
 
@@ -77,14 +83,18 @@ To give another example, let us prove the transitivity of implications from clas
   \infer{\goal \lambda p. h_2(h_1(p)) : P \to R}{\infer{p : P \goal h_2(h_1(p)) : R}{\infer{p : P \goal h_1(p) : Q}{\goal h_1 : P \to Q} & \goal h_2 : Q \to R}}
 \]
 
-This is precisely how theorem provers such as Lean work via the Curry-Howard correspondence: by treating Mathematical statements as types and Mathematical proofs as terms of that type, a \textit{valid} DTT term of the type would imply that the corresponding Mathematical statement is correct. Moreover, the validity of a DTT term is relatively easy to check by a computer: it boils down to checking if the types match up and everything is ``intuitively correct'', and definitely easier than checking a Mathematical proof filled with informal lingual.
+This is precisely how theorem provers such as Lean work via the Curry-Howard correspondence: by treating mathematical statements as types and mathematical proofs as terms of that type, a \textit{valid} DTT term of the type would imply that the corresponding mathematical statement is correct. Moreover, the validity of a DTT term is relatively easy to check by a computer: it boils down to checking if the types match up and everything is ``intuitively correct'', and definitely easier than checking a mathematical proof filled with informal lingual.
 
 \subsection{DTT and Lean}
 \todo{\ok Given examples of Lean proofs, relating to the CH correspondence.}
 
-Now that we have established the connection between DTT and Mathematics, as well as DTT and theorem provers, it is time to connect Mathematics with theorem provers, of which of course we focus on Lean.
+Now that we have established the connection between DTT and mathematics, as well as DTT and theorem provers, it is time to connect mathematics with theorem provers, of which of course we focus on Lean.
 
-Lean is a theorem prover built on top of a Dependent Type Theory, more specifically the Martin-Löf Type Theory (with several extra ``add-ons''). Of course, users do not type in typed lambda expressions or inference trees directly into Lean, or else no Mathematicians would use it. Instead, users are able to type commands that manipulate the context (goal state + hypotheses) that mimicks paper proofs - see below for examples \footnote{We will only use tactic mode in this essay.}. Lean has several different parts, such as the \textit{elaborator} and \textit{type inferencer}, which translate such commands into DTT terms (which may look like \(\mathrm{Eq} ((\lambda x. f x) y) (f y)\), for example). Finally, these terms are passed on to the Lean 4 kernel, which verifies the term is indeed correct. An extremely important detail is that the Lean 4 kernel is quite small, around \(18200\) lines of code (via~\mintinline[fontsize=\footnotesize]{sh}{find ~/git/lean4/src -path "*/library/*.cpp" -or -path "*/kernel/*.cpp" | xargs cloc}).
+Lean is a theorem prover built on top of a Dependent Type Theory, more specifically the Martin-Löf Type Theory (with several extra ``add-ons''). Of course, users do not type in typed lambda expressions or inference trees directly into Lean, or else no mathematicians would use it. Instead, users are able to type commands that manipulate the context (goal state + hypotheses) that mimicks paper proofs - see below for examples \footnote{We will only use tactic mode in this essay.}. Lean has several different parts, such as the \textit{elaborator} and \textit{type inferencer}, which translate such commands into DTT terms (which may look like \(\mathrm{Eq} ((\lambda x. f x) y) (f y)\), for example). Finally, these terms are passed on to the Lean 4 kernel, which verifies the term is indeed correct. An extremely important detail is that the Lean 4 kernel is quite small, around \(18200\) lines of code, computed via
+
+\begin{minted}[fontsize=\footnotesize]{sh}
+  find ~/git/lean4/src -path "*/library/*.cpp" -or -path "*/kernel/*.cpp" | xargs cloc
+\end{minted}
 
 As an example, let us formalise our proof for \((P \implies Q) \land (Q \implies R) \implies (P \implies R)\). From \ref{sec:ch-correspondence}, our task is reduced to constructing a term of type \(P \to R\), given two terms \(h_1 : P \to Q\) and \(h_2 : Q \to R\). In Lean, it is written as follows:
 
@@ -97,7 +107,7 @@ example {P Q R : Prop} (h₁ : P → Q) (h₂ : Q → R) : P → R := by
 
 Let us unpack this slowly. The first line begins with the \mintinline{lean}{example} keyword, which is used to indicate the start of a(n unnamed) proof. Next, the \mintinline{lean}{{P Q R : Prop}} and \mintinline{lean}{(h₁ : P → Q) (h₂ : Q → R)} tokens are the hypotheses of our claim. Here, in the curly braces we are stating the judgements \(\goal P, Q, R : \mathrm{Prop}\), while the latter ones in parentheses are the judgements \(\goal h₁ : P \to Q\) and \(\goal h₂ : Q \to R\). After the hypotheses, we have the goal state, that is, the type of which we would like to construct a term for. Here, it is the type \(P \to R\). Simple!
 
-From the second line onwards, we begin to write the proof of the statement. Here, we again follow the proof given by the inference tree~\cite{ch-tree}. On the second line, we have \mintinline{lean}{intro p}. Notice that at this point, our goal (type) is of the form \(P \to R\), and from the inference rules of the function constructors, we know that it suffices to ``give'' an element \(r : R\), for every element \(p : P\). The \mintinline{lean}{intro} keyword (called a \textit{tactic}) effectively introduces the \(p : P\) into the context. On the inference tree, it is turning the goal state from the final layer to the second last layer:
+From the second line onwards, we begin to write the proof of the statement. Here, we again follow the proof given by the inference tree~\ref{ch-tree}. On the second line, we have \mintinline{lean}{intro p}. Notice that at this point, our goal (type) is of the form \(P \to R\), and from the inference rules of the function constructors, we know that it suffices to ``give'' an element \(r : R\), for every element \(p : P\). The \mintinline{lean}{intro} keyword (called a \textit{tactic}) effectively introduces the \(p : P\) into the context. On the inference tree, it is turning the goal state from the final layer to the second last layer:
 
 \[
   \infer{\goal P \to R}{\cdots} \quad \longrightarrow \quad \infer{\goal P \to R}{\infer{\color{red} p : P \goal R}{\cdots}}
@@ -121,4 +131,32 @@ theorem f : ∀ (P Q R : Prop), (P → Q) → (Q → R) → P → R :=
 We see that there is a \mintinline{lean}{let_fun} statement which can be inlined (or substituted), but otherwise it is a single expression \(\lambda P. \lambda Q. \lambda R. \lambda h_1. \lambda h_2. \lambda p. h_2h_1p)\).
 
 \subsection{Necessity of Mathlib}
-\todo{Give an example of a Mathematical proof to motivate the existence of Mathlib, introduce it, and give an example on how to use it.}
+\todo{\ok Give an example of a mathematical proof to motivate the existence of Mathlib, introduce it, and give an example on how to use it.}
+
+Apart from several technical details (such as subtypes), we have described how to formalise set-theoretic statements in Lean, meaning that theoretically it is possible to construct most of mathematics in Lean now. Of course, it would be undesirable for everyone to maintain their own implementation of a mathematical library / definitions. Therefore, a community project called Mathlib was formed. To quote its GitHub README,
+
+\begin{quotationbox}
+  Mathlib is a user maintained library for the Lean theorem prover. It contains both programming infrastructure and mathematics, as well as tactics that use the former and allow to develop the latter.
+\end{quotationbox}
+
+For example, it contains a large amount of definitions and lemmas on mathematical objects from various fields, ranging from real analysis, algebraic geometry, number theory and linear algebra. No more defining \(\R\) via Dedekind cuts from scratch for each project, as it is defined as \mintinline{lean}{ℝ} or \mintinline{lean}{Real} type in the \mintinline{lean}{MATHLIB_ROOT/Mathlib/Data/Real/Basic.lean} file. To use it in a project file, simply include the line \mintinline{lean}{import Mathlib.Data.Real.Basic} at the top of the file.
+
+Apart from mathematical definitions, Mathlib also contains a large number of \textit{tactics}, which are user commands that speeds up the process of proving statements. For example, suppose that one has to prove \(a + b + c - a - b - c = 0\) for a commutative additive group \(G\) and \(a, b, c : G\). Without automation, the best way to approach this would be to swap pairs of elements until terms of opposite signs are adjacent to each other. Here is one possible solution:
+
+\begin{minted}{lean}
+example {G : Type*} [AddCommGroup G] {a b c : G} :
+    a + b + c - a - b - c = 0 := by
+  rw [add_sub_right_comm, add_sub_right_comm, add_sub_cancel_left, add_sub_cancel_right, sub_self]
+\end{minted}
+
+This is tedious and does not scale well as the number of terms increases. In Mathlib, there is a tactic called \mintinline{lean}{abel} which is specifically designed to handle such goals. Instead of the long \mintinline{lean}{rw} chain above, one can instead write
+
+\begin{minted}{lean}
+example {G : Type*} [AddCommGroup G] {a b c : G} :
+    a + b + c - a - b - c = 0 := by
+  abel
+\end{minted}
+
+\subsection{Pitfalls of Lean \& Mathlib} \label{sec:lean_pitfall}
+
+Lean functions are always \textit{total}. In other words, all functions must have a definition for every value in its domain. This is naturally satisfied already. For example, the addition operartor \(+ : \N \times \N \to \N\) is total. However, the subtraction operator is not, as \(3 - 5\) does not have a value in \(\N\). The way Lean handles these cases is by assigning them \textit{junk values}. In the case of subtracting natural numbers, Lean defines \(a - b = 0\) whenever \(a < b\). A more interesting example is integer division, where \(13 / 2\) again does not have a value in \(\N\). This time, Lean assigns the value \(6\) to it, which is \(\lfloor\frac{13}{2}\rfloor\). These are design choices that are made somewhat arbitrarily, and must be handled separately. An example of this can be found in~\cref{construction_div_two}, where we intentionally write \mintinline{lean}{q ≤ 2 * b} instead of \mintinline{lean}{q / 2 ≤ b}.
