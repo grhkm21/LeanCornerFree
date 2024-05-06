@@ -11,13 +11,13 @@ open Int hiding range
 open Finset BigOperators Filter Asymptotics
 open BenGreen Construction
 
-#eval (A (d := 2) (q := 5) 5)
-#eval (univ : Finset (Vec' 2 5)).map VecToInt
-#eval (A (d := 2) (q := 5) 5).map VecPairToInt
-#eval AddCornerFree ((A (d := 2) (q := 5) 5).map VecPairToInt : Set (ℤ × ℤ))
-
-#check List.map
-#eval List.map (fun r ↦ (A (d := 2) (q := 5) r).card) (List.range 51)
+/- #eval (A (d := 2) (q := 5) 5) -/
+/- #eval (univ : Finset (Vec' 2 5)).map VecToInt -/
+/- #eval (A (d := 2) (q := 5) 5).map VecPairToInt -/
+/- #eval AddCornerFree ((A (d := 2) (q := 5) 5).map VecPairToInt : Set (ℤ × ℤ)) -/
+/-  -/
+/- #check List.map -/
+/- #eval List.map (fun r ↦ (A (d := 2) (q := 5) r).card) (List.range 51) -/
 
 -- The set of all pairs (x, y) with q/2 ⩽ x + y < 3q/2 has size 3/4*q^2 + O(q)
 -- Might delete later (Yes this is a Cole reference)
@@ -28,7 +28,7 @@ def aux1_type (q m n : ℤ) : Finset ((Ico 0 q) × (Ico 0 q)) :=
     v ∈ aux1_type q m n ↔ v.fst.val + v.snd.val ∈ Ico m n := by
   simp [aux1_type, mem_filter]
 
-theorem mem_aux1_type_double {q : ℤ} {v} : v ∈ aux1_type q 0 (2 * q) := by
+theorem mem_aux1_type_double {q : ℤ} {v} : v ∈ aux1_type q 0 (2 * q - 1) := by
   rcases v with ⟨⟨x, hx⟩, ⟨y, hy⟩⟩
   simp at hx hy ⊢
   omega
@@ -70,7 +70,7 @@ lemma aux_slice1 {q m} (hm₁ : 0 ≤ m) (hm₂ : m ≤ q - 1) : (aux1_type q m 
     · intro ⟨⟨x, y⟩, h⟩
       simp at h ⊢
       simp_rw [← h]
-      ring
+      ring_nf
     · intro; simp
   have := Fintype.card_congr this
   rw [Fintype.card_coe, Fintype.card_coe, card_Icc, sub_zero] at this
@@ -205,6 +205,17 @@ lemma lem (a : ℕ) (b : ℤ) :
   | ofNat (.succ n) => simp [show (n : ℤ) + 1 ≠ 0 by omega, negSucc_eq, Int.succ]
   | -[n+1] => split_ifs; any_goals tauto
 
+def aux_type_mirror {a b q : ℤ} :
+    aux1_type q a b ≃ aux1_type q (2 * q - 1 - b) (2 * q - 1 - a) where
+  toFun := fun ⟨⟨⟨x, hx⟩, ⟨y, hy⟩⟩, h⟩ ↦ by
+    use ⟨⟨q - 1 - x, ?_⟩, ⟨q - 1 - y, ?_⟩⟩, ?_
+    all_goals simp [mem_Ico] at hx hy h ⊢; omega
+  invFun := fun ⟨⟨⟨x, hx⟩, ⟨y, hy⟩⟩, h⟩ ↦ by
+    use ⟨⟨q - 1 - x, ?_⟩, ⟨q - 1 - y, ?_⟩⟩, ?_
+    all_goals simp [mem_Ico] at hx hy h ⊢; omega
+  left_inv := fun ⟨⟨⟨_, _⟩, ⟨_, _⟩⟩, _⟩ ↦ by congr! <;> omega
+  right_inv := fun ⟨⟨⟨_, _⟩, ⟨_, _⟩⟩, _⟩ ↦ by congr! <;> omega
+
 theorem todo (a b : ℤ) : (a / b - 1 : ℚ) ≤ (a / b : ℤ) := by
   obtain ⟨b, rfl | rfl⟩ := Int.eq_nat_or_neg b
   · by_cases hb : b = 0
@@ -238,6 +249,46 @@ theorem todo' {a b : ℤ} (hb : 0 ≤ b) : (a / b : ℤ) ≤ (a / b : ℚ) := by
 /-   | .succ (.succ b) => -/
 /-     simp_rw [Nat.succ_eq_add_one, Nat.add_div (by omega : 0 < b + 1 + 1)] -/
 /-     split_ifs <;> simp [show 1 / (b + 1 + 1) = 0 by rw [(Nat.div_eq_zero_iff ?_).mpr] <;> omega] -/
+
+/- [a, b) - [c, d) = [a, c) + [d, b) -/
+lemma asdf {a b c d : ℤ} (h : max a c < min b d) :
+    Ico a b \ Ico c d = Ico a (max a c) ∪ Ico (min b d) b := by
+  rw [← sdiff_inter_self_left, Ico_inter_Ico]
+  have : Ico a b = Ico a (max a c) ∪ Ico (max a c) (min b d) ∪ Ico (min b d) b := by
+    rw [Ico_union_Ico, Ico_union_Ico] <;> congr <;> omega
+  rw [this, union_right_comm, union_sdiff_cancel_right]
+  apply disjoint_union_left.mpr ⟨?_, ?_⟩
+  all_goals
+    rw [disjoint_iff_inter_eq_empty, Ico_inter_Ico, Ico_eq_empty_iff]
+    omega
+
+/- Error term from applying to IsInCons -/
+lemma aux_error (q a b a' b' : ℤ) (hq : 0 ≤ q)
+    (h : max a a' < min b b') (ha : |a - a'| ≤ 1) (hb : |b - b'| ≤ 1) :
+    |(((aux1_type q a b).card - (aux1_type q a' b').card) : ℝ)| ≤ 4 * q := by
+  rw [abs_le] at ha hb
+  rw [aux_triangle', aux_triangle', Nat.cast_sum, Nat.cast_sum, ← sum_sdiff_sub_sum_sdiff]
+  have h₁ : (Ico a b \ Ico a' b').card ≤ 2 := by
+    rw [asdf h, card_union_of_disjoint, ← one_add_one_eq_two]
+    apply add_le_add
+    · simp; omega
+    · simp; omega
+    · rw [disjoint_iff_inter_eq_empty, Ico_inter_Ico, Ico_eq_empty_iff]; omega
+  have h₂ : (Ico a' b' \ Ico a b).card ≤ 2 := by
+    rw [max_comm, min_comm] at h
+    rw [asdf h, card_union_of_disjoint, ← one_add_one_eq_two]
+    apply add_le_add
+    · simp; omega
+    · simp; omega
+    · rw [disjoint_iff_inter_eq_empty, Ico_inter_Ico, Ico_eq_empty_iff]; omega
+  rw [show 4 * (q : ℝ) = 2 * q + 2 * q by ring]
+  apply (abs_sub _ _).trans
+  apply add_le_add
+  all_goals
+    apply (abs_sum_le_sum_abs _ _).trans
+    apply (sum_le_sum (g := fun _ ↦ (q : ℝ)) _).trans
+    · rw [sum_const, nsmul_eq_mul]; gcongr; norm_cast
+    · intro x _; simp; norm_cast; exact aux_slice_bound hq
 
 lemma aux_lower_bound {b : ℤ} (hb : 4 ≤ b) :
     ((b : ℚ) - 2) * (b - 4) / 8 - 1 ≤ ((b / 2) * (b / 2 - 1) / 2 : ℤ) := by
@@ -308,12 +359,28 @@ lemma aux_triangle1 :
     · rw [abs_of_nonpos h, toNat_of_nonpos]
       all_goals omega
 
-lemma aux_triangle2 :
-    (fun q ↦ ((aux1_type q (3 * q / 2) (2 * q)).card : ℝ) - (q : ℝ) ^ 2 / 8)
-      =O[atTop] (fun q ↦ q) := by
-  sorry
+lemma aux_triangle2_mirror {q : ℤ} :
+    (aux1_type q (3 * q / 2) (2 * q - 1)).card = (aux1_type q 0 ((q - 1) / 2)).card :=
+  card_eq_of_equiv (by convert aux_type_mirror using 5 <;> omega)
 
-lemma aux_triangle3 (hq : 0 ≤ q) : (aux1_type q 0 (2 * q)).card = q ^ 2 := calc
+lemma aux_triangle2 :
+    (fun q ↦ ((aux1_type q (3 * q / 2) (2 * q - 1)).card : ℝ) - (q : ℝ) ^ 2 / 8)
+      =O[atTop] (fun q ↦ q) := by
+  simp_rw [aux_triangle2_mirror]
+  have h₃ : (fun q ↦ ((aux1_type q 0 ((q - 1) / 2)).card : ℝ) -
+      (aux1_type q 0 (q / 2)).card) =O[atTop] (fun q ↦ q) := by
+    refine isBigO_iff_isBigOWith.mpr ⟨4, ?_⟩
+    rw [IsBigOWith]
+    simp only [eventually_atTop, norm_eq_abs]
+    refine ⟨3, fun q hq ↦ ?_⟩
+    rw [abs_of_nonneg (by norm_cast; omega), Real.norm_eq_abs]
+    apply aux_error
+    all_goals
+      try rw [abs_le]
+      omega
+  simpa using h₃.add aux_triangle1
+
+lemma aux_triangle3 {q : ℤ} (hq : 0 ≤ q) : (aux1_type q 0 (2 * q - 1)).card = q ^ 2 := calc
   _ = ((univ : Finset (Ico 0 q × Ico 0 q)).card : ℤ) := by
     norm_cast
     apply Finset.card_eq_of_equiv
@@ -329,16 +396,16 @@ def mem_aux1_type_union {q a b c : ℤ} (hab : a ≤ b) (hbc : b ≤ c) :
   simp
   constructor <;> intro h <;> cases' h <;> omega
 
-lemma aux_triangles_union (q : ℤ) (hq : 0 ≤ q) :
+lemma aux_triangles_union (q : ℤ) (hq : 1 ≤ q) :
     ((aux1_type q 0 (q / 2)).card + (aux1_type q (q / 2) (3 * q / 2)).card
-      + (aux1_type q (3 * q / 2) (2 * q)).card : ℤ) = q ^ 2 := by
-  rw [← aux_triangle3 hq]
+      + (aux1_type q (3 * q / 2) (2 * q - 1)).card : ℤ) = q ^ 2 := by
+  rw [← aux_triangle3 (zero_le_one.trans hq)]
   rw [← Nat.cast_add, ← Nat.cast_add, ← card_union_of_disjoint, ← card_union_of_disjoint]
   norm_cast
   · apply Finset.card_eq_of_equiv
-    trans { x // x ∈ aux1_type q 0 (3 * q / 2) ∪ aux1_type q (3 * q / 2) (2 * q) }
+    trans { x // x ∈ aux1_type q 0 (3 * q / 2) ∪ aux1_type q (3 * q / 2) (2 * q - 1) }
     · apply Equiv.subtypeEquivRight
-      simp_rw [mem_union (t := aux1_type q (3 * q / 2) (2 * q))]
+      simp_rw [mem_union (t := aux1_type q (3 * q / 2) (2 * q - 1))]
       exact fun x ↦ or_congr_left $ mem_aux1_type_union (by omega) (by omega) x
     · exact Equiv.subtypeEquivRight $ mem_aux1_type_union (by omega) (by omega)
   · simp_rw [disjoint_union_left, disjoint_iff_ne]
@@ -358,15 +425,15 @@ lemma aux_triangles_union (q : ℤ) (hq : 0 ≤ q) :
     subst hx hy
     omega
 
-lemma aux_triangles_union_real (q : ℤ) (hq : 0 ≤ q) :
+lemma aux_triangles_union_real (q : ℤ) (hq : 1 ≤ q) :
     (aux1_type q 0 (q / 2)).card + (aux1_type q (q / 2) (3 * q / 2)).card
-      + (aux1_type q (3 * q / 2) (2 * q)).card = (q : ℝ) ^ 2 := by
+      + (aux1_type q (3 * q / 2) (2 * q - 1)).card = (q : ℝ) ^ 2 := by
   simp_rw [← cast_natCast (R := ℝ), ← cast_add]
   rw [aux_triangles_union q hq]
   exact cast_pow q 2
 
 lemma aux_triangle12 :
-    (fun q ↦ (aux1_type q 0 (q / 2)).card + (aux1_type q (3 * q / 2) (2 * q)).card
+    (fun q ↦ (aux1_type q 0 (q / 2)).card + (aux1_type q (3 * q / 2) (2 * q - 1)).card
       - (q : ℝ) ^ 2 / 4) =O[atTop] (fun q ↦ q) := by
   convert aux_triangle1.add aux_triangle2 using 2 with q
   ring
@@ -376,7 +443,7 @@ lemma aux_triangle3' :
       =O[atTop] (fun q ↦ q) := by
   apply EventuallyEq.trans_isBigO _ aux_triangle12
   rw [EventuallyEq, eventually_atTop]
-  use 0
+  use 1
   intro q hq
   rw [sub_eq_iff_eq_add, sub_add_eq_add_sub, add_right_comm, aux_triangles_union_real q hq]
   ring
@@ -387,7 +454,7 @@ lemma aux2 :
   rw [← isBigO_neg_iff]
   apply EventuallyEq.trans_isBigO _ aux_triangle12
   rw [EventuallyEq, eventually_atTop]
-  use 0
+  use 1
   intro q hq
   rw [Pi.neg_apply, neg_sub, sub_eq_iff_eq_add, sub_add_eq_add_sub, add_right_comm,
     aux_triangles_union_real q hq]
@@ -399,55 +466,7 @@ lemma card_cast_sub_eq_sdiff_card_sub_sdiff_card {α : Type*} [DecidableEq α] {
   norm_cast
   simp_rw [add_comm s.card _, card_sdiff_add_card, union_comm]
 
-/- [a, b) - [c, d) = [a, c) + [d, b) -/
-lemma asdf {a b c d : ℤ} (h : max a c < min b d) :
-    Ico a b \ Ico c d = Ico a (max a c) ∪ Ico (min b d) b := by
-  rw [← sdiff_inter_self_left, Ico_inter_Ico]
-  have : Ico a b = Ico a (max a c) ∪ Ico (max a c) (min b d) ∪ Ico (min b d) b := by
-    rw [Ico_union_Ico, Ico_union_Ico] <;> congr <;> omega
-  rw [this, union_right_comm, union_sdiff_cancel_right]
-  apply disjoint_union_left.mpr ⟨?_, ?_⟩
-  all_goals
-    rw [disjoint_iff_inter_eq_empty, Ico_inter_Ico, Ico_eq_empty_iff]
-    omega
-
-/- Error term from applying to IsInCons -/
-lemma aux_error (q a b a' b' : ℤ) (hq : 0 ≤ q)
-    (h : max a a' < min b b') (ha : |a - a'| ≤ 1) (hb : |b - b'| ≤ 1) :
-    |(((aux1_type q a b).card - (aux1_type q a' b').card) : ℝ)| ≤ 4 * q := by
-  rw [abs_le] at ha hb
-  rw [aux_triangle', aux_triangle', Nat.cast_sum, Nat.cast_sum, ← sum_sdiff_sub_sum_sdiff]
-  have h₁ : (Ico a b \ Ico a' b').card ≤ 2 := by
-    rw [asdf h, card_union_of_disjoint, ← one_add_one_eq_two]
-    apply add_le_add
-    · simp; omega
-    · simp; omega
-    · rw [disjoint_iff_inter_eq_empty, Ico_inter_Ico, Ico_eq_empty_iff]; omega
-  have h₂ : (Ico a' b' \ Ico a b).card ≤ 2 := by
-    rw [max_comm, min_comm] at h
-    rw [asdf h, card_union_of_disjoint, ← one_add_one_eq_two]
-    apply add_le_add
-    · simp; omega
-    · simp; omega
-    · rw [disjoint_iff_inter_eq_empty, Ico_inter_Ico, Ico_eq_empty_iff]; omega
-  rw [show 4 * (q : ℝ) = 2 * q + 2 * q by ring]
-  apply (abs_sub _ _).trans
-  apply add_le_add
-  all_goals
-    apply (abs_sum_le_sum_abs _ _).trans
-    apply (sum_le_sum (g := fun _ ↦ (q : ℝ)) _).trans
-    · rw [sum_const, nsmul_eq_mul]; gcongr; norm_cast
-    · intro x _; simp; norm_cast; exact aux_slice_bound hq
-
-/-
-abbrev Vec (d : ℕ) := Fin d → ℤ
-abbrev Vec' (d q : ℕ) := {f : Vec d // 0 ≤ f ∧ f + 1 ≤ q}
-
-def IsInCons (r : ℕ) (x y : Vec' d q) : Prop :=
-    ... ∧ (q ≤ 2 * (x.val + y.val) ∧ 2 * (x.val + y.val) + 1 ≤ 3 * q)
-def A (r : ℕ) : Finset (Vec' d q × Vec' d q) := univ.filter (IsInCons r).uncurry
--/
-#check IsInCons
+/- #check IsInCons -/
 
 lemma aux_isInCons_rw1 {x q : ℤ} : q ≤ 2 * x ↔ (q + 1) / 2 ≤ x := by omega
 
@@ -474,7 +493,7 @@ lemma aux2' :
     (fun q ↦ ((aux1_type q ((q + 1) / 2) ((3 * q + 1) / 2)).card : ℝ) - (q : ℝ) ^ 2 * 3 / 4)
       =O[atTop] (fun q ↦ q) := by
   have h₃ : (fun q ↦ ((aux1_type q ((q + 1) / 2) ((3 * q + 1) / 2)).card : ℝ)
-      - ↑(aux1_type q (q / 2) (3 * q / 2)).card) =O[atTop] (fun q ↦ q) := by
+      - (aux1_type q (q / 2) (3 * q / 2)).card) =O[atTop] (fun q ↦ q) := by
     refine isBigO_iff_isBigOWith.mpr ⟨4, ?_⟩
     rw [IsBigOWith]
     simp only [eventually_atTop, norm_eq_abs]
@@ -508,9 +527,9 @@ lemma A_empty {d q r : ℕ} (hr : d * (q - 1) ^ 2 < r) : @A d q r = ∅ := by
     gcongr
     · simp
     · omega
-    · omega
+    · simp [Nat.cast_sub (by norm_cast at this : 1 ≤ q)]
 
-def aux_isInCons_embed (hd : 0 < d) :
+def aux_isInCons_embed {d q : ℕ} (hd : 0 < d) :
     (Σ r : Fin (d * q ^ 2), @A d q r) ≃ (Fin d → aux1_type q ((q + 1) / 2) ((3 * q + 1) / 2)) where
   toFun := fun ⟨r, ⟨⟨⟨x, hx⟩, ⟨y, hy⟩⟩, hxy⟩⟩ i ↦ by
     use ⟨⟨x i, ?_⟩, ⟨y i, ?_⟩⟩, ?_
@@ -521,7 +540,6 @@ def aux_isInCons_embed (hd : 0 < d) :
       simp at this
       omega
   invFun := fun f ↦ by
-    /- [q/2,3q/2]^d → ∏r,A d q r -/
     let r := norm' (fun i ↦ ((f i).val.fst.val - (f i).val.snd.val))
     have h₁ : 0 ≤ r := norm'_nonneg _
     have h₂ : r < d * q ^ 2 := by
@@ -530,7 +548,9 @@ def aux_isInCons_embed (hd : 0 < d) :
       have h (i) : ((f i).val.fst.val - (f i).val.snd.val) ^ 2 ∈ Ico 0 ((q : ℤ) ^ 2) := by
         specialize h₁ i; specialize h₂ i
         rw [mem_Ico] at h₁ h₂ ⊢
-        exact ⟨sq_nonneg _, by simp [sq_lt_sq, abs_lt]; omega⟩
+        refine ⟨sq_nonneg _, ?_⟩
+        rw [sq_lt_sq, abs_of_nonneg (h₁.left.trans h₁.right.le), abs_lt]
+        omega
       dsimp [r, norm']
       apply lt_of_lt_of_le $ sum_lt_sum (fun i _ ↦ (mem_Ico.mp (h i)).right.le) ?_
       · simp
@@ -568,7 +588,7 @@ lemma A_empty' {d q r : ℕ} (hd : 0 < d) (hq : 0 < q) (hr : d * q ^ 2 ≤ r) : 
 /- def aux_isInCons_embed (hd : 0 < d) : -/
 /-     (Σ r : Fin (d * q ^ 2), @A d q r) ≃ (Fin d → aux1_type q ((q + 1) / 2) ((3 * q + 1) / 2)) where -/
 
--- The set of all pairs (x, y) with q/2 ⩽ x_i + y_i < 3q/2 for all i has size (3/4*q^2 + O(q))^d
+-- The Σ-type (Σ r, A r) has size (3/4*q^2 + O(q))^d
 theorem part2 {d : ℕ} (hd : 0 < d) : ∃ f : ℤ → ℝ, f =O[atTop] (fun q ↦ q) ∧
     (fun q ↦ (Fintype.card ((r : Fin (d * q ^ 2)) × @A d q r) : ℝ))
       =ᶠ[atTop] (fun q ↦ (q ^ 2 * 3 / 4 + f q) ^ d) := by
