@@ -80,3 +80,6 @@ theorem asympt2 {c : ℝ} (hc : 1 < c) : ∀ f : ℕ → ℝ, f =o[atTop] (fun _
         =ᶠ[atTop] (fun N ↦ (1 + g N) * sqrt (log N / log c)) := by
   intro f hf
   exact aux4 hc f hf
+
+#check IsLittleO
+#check Tendsto

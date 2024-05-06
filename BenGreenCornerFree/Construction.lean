@@ -136,7 +136,9 @@ lemma VecEqMod' (v : Vec' d.succ q) : v.val 0 ≡ VecToInt v [ZMOD q] := VecEqMo
 /- The Mathlib norm requires us to work with real numbers :( -/
 def norm' (v : Vec d) : ℤ := ∑ i, (v i) ^ 2
 
-def IsInCons (r : ℕ) (x y : Vec' d q) : Prop :=
+lemma norm'_nonneg (v : Vec d) : 0 ≤ norm' v := sum_nonneg (fun _ _ ↦ sq_nonneg _)
+
+@[simp] abbrev IsInCons (r : ℕ) (x y : Vec' d q) : Prop :=
     norm' (x.val - y.val) = r ∧ (q ≤ 2 * (x.val + y.val) ∧ 2 * (x.val + y.val) + 1 ≤ 3 * q)
 
 instance : DecidablePred (@IsInCons d q r).uncurry := by
@@ -149,14 +151,16 @@ instance : DecidablePred (@IsInCons d q r).uncurry := by
 
 def A (r : ℕ) : Finset (Vec' d q × Vec' d q) := univ.filter (IsInCons r).uncurry
 
-lemma mem_A_iff {x y : Vec' d q} : ⟨x, y⟩ ∈ @A d q r ↔ IsInCons r x y := by
+@[simp] lemma mem_A_iff {x y : Vec' d q} : ⟨x, y⟩ ∈ @A d q r ↔ IsInCons r x y := by
   simp only [mem_filter, mem_univ, true_and, Function.uncurry, A]
 
+#eval (univ : Finset (Vec' 5 0))
+
 #check Nat.ofDigits
-#eval (A (d := 2) (q := 5) 5)
+#eval (A (d := 2) (q := 3) 5)
 #eval (univ : Finset (Vec' 2 5)).map VecToInt
-#eval (A (d := 2) (q := 5) 5).map VecPairToInt
-#eval AddCornerFree ((A (d := 2) (q := 5) 5).map VecPairToInt : Set (ℤ × ℤ))
+#eval (A (d := 2) (q := 3) 5).map VecPairToInt
+#eval AddCornerFree ((A (d := 2) (q := 3) 5).map VecPairToInt : Set (ℤ × ℤ))
 
 /- --------------------------------------------------------------------------- -/
 

@@ -19,12 +19,12 @@ lemma pow_add_mul_self_le_pow_one_add
     rw [show a + b = a * (1 + b / a) by rw [mul_add, mul_one, mul_div_cancel₀ b (by linarith)],
       mul_pow]
     refine le_trans ?_ ?_ (b := a ^ c * (1 + c * (b / a)))
-    · rw [mul_add, mul_one, ←mul_one (c * b), mul_div, mul_div, mul_comm (a ^ c), ←mul_div]
+    · rw [mul_add, mul_one, ← mul_one (c * b), mul_div, mul_div, mul_comm (a ^ c), ← mul_div]
       gcongr
       rw [le_div_iff ha', one_mul]
       exact le_self_pow ha (Nat.not_eq_zero_of_lt hc)
     · gcongr
-      rw [←rpow_nat_cast]
+      rw [← rpow_natCast]
       refine one_add_mul_self_le_rpow_one_add ?_ (Nat.one_le_cast.mpr hc)
       exact (show (-1 : ℝ) ≤ 0 by norm_num).trans (by positivity)
   · norm_num at hc
@@ -56,13 +56,13 @@ lemma aux_part1 (c : ℝ) (hc : 1 ≤ c) :
   · rw [ge_iff_le, sub_nonneg]
     exact (mem_Icc.mp hf₁).left
   · beta_reduce at hf₂
-    rw [←add_sub_assoc, add_sub_cancel_left, hf₂]
+    rw [← add_sub_assoc, add_sub_cancel_left, hf₂]
 
 lemma aux_part2 (c : ℝ) (hc : 1 ≤ c) :
     ∀ f : ℕ → ℝ, (0 ≤ f ∧ ∀ d, 1 ≤ d → c ^ d + 1 = (c + f d) ^ d) → (f =o[atTop] (1 : ℕ → ℝ)) := by
   intro f ⟨hf₁, hf₂⟩
   have {d} (hd : 1 ≤ d) : (c + f d) ^ d ≤ (c + 1 / (d : ℝ)) ^ d := by
-    rw [←hf₂ d hd]
+    rw [← hf₂ d hd]
     have : c + 1 / (d : ℝ) = c * (1 + 1 / (c * d : ℝ)) := by
       rw [mul_add, mul_one, div_mul_eq_div_div, mul_div, mul_one_div_cancel (by linarith)]
     convert pow_add_mul_self_le_pow_one_add d hc ?_
@@ -79,7 +79,7 @@ lemma aux_part2 (c : ℝ) (hc : 1 ≤ c) :
 
   refine IsBigO.trans_isLittleO (IsBigO.of_bound' this) ?_
   simp_rw [Pi.one_def, isLittleO_iff, eventually_atTop, norm_div, norm_one, mul_one,
-    IsROrC.norm_natCast]
+    RCLike.norm_natCast]
   intro c hc
   use max 1 ⌈1 / c⌉₊
   intro b hb
@@ -91,3 +91,10 @@ lemma aux (c : ℝ) (hc : 1 ≤ c) :
     ∃ f : ℕ → ℝ, f =o[atTop] (1 : ℕ → ℝ) ∧ (∀ d, 1 ≤ d → c ^ d + 1 = (c + f d) ^ d) := by
   obtain ⟨f, hf⟩ := aux_part1 c hc
   use f, aux_part2 c hc f hf, hf.right
+
+lemma aux' (c : ℝ) (hc : 1 ≤ c) :
+    ∃ f : ℕ → ℝ, f =o[atTop] (1 : ℕ → ℝ) ∧ (∀ᶠ d in atTop, c ^ d + 1 = (c + f d) ^ d) := by
+  obtain ⟨f, hf⟩ := aux c hc
+  use f, hf.left
+  simp only [eventually_atTop, ge_iff_le]
+  use 1, hf.right
