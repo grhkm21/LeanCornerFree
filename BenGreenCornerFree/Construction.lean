@@ -8,7 +8,7 @@ namespace BenGreen.Construction
 open Int Finset BigOperators
 
 /- Make sure this fails because of autoImplicit=false -/
-/- example : a + 1 = 2 := by sorry -/
+example : a + 1 = 2 := by sorry
 
 -- Before anything, let us check out the space ℤ_q^d
 #check Module
@@ -47,14 +47,40 @@ def VecTruncate (v : Vec' d q) (d' : Fin d) : Vec' (d - d') q where
     · exact fun _ ↦ v.prop.left _
     · exact fun _ ↦ v.prop.right _
 
+lemma sum_modEq_sum_mod {α : Type*} [DecidableEq α] {f : α → ℤ} {s : Finset α} {q : ℤ} :
+    ∑ i in s, f i ≡ ∑ i in s, (f i % q) [ZMOD q] := by
+  induction' s using Finset.induction_on with x s hx ih
+  · rfl
+  · simp_rw [sum_insert hx]
+    gcongr
+    exact (Int.mod_modEq _ _).symm
+
+lemma VecToInt_mod_q {v : Vec' d q} (hd : 0 < d) :
+    (∑ i, v.val i * q ^ i.val) % q = v.val ⟨0, hd⟩ % q := by
+  have : ∀ i, v.val i * q ^ i.val % q = if i = ⟨0, hd⟩ then v.val i % q else 0 := by
+    intro ⟨i, hi⟩
+    cases i with
+    | zero => simp
+    | succ n => simp [pow_succ, ← mul_assoc]
+  rw [sum_modEq_sum_mod]
+  simp [this]
+
+#check Nat.ofDigits
 def VecToInt : Vec' d q ↪ ℤ where
   toFun := fun v ↦ ∑ i, v.val i * q ^ i.val
-  inj' := fun v₁ v₂ hv ↦ by sorry
+  inj' := fun v₁ v₂ hv ↦ by
+    ext ⟨i, hi⟩
+    induction i with
+    | zero =>
+      have := congrArg (fun x : ℤ ↦ x % q) hv
+      simp_rw [VecToInt_mod_q hi] at this
+      convert this
+      · rw [mod_eq_self]
+      · done
+    | succ n ih => sorry
 
 /- Integer after dropping first d' elements -/
-def VecToInt' (k : Fin d) : Vec' d q ↪ ℤ where
-  toFun := fun v ↦ VecToInt (VecTruncate v k)
-  inj' := fun v₁ v₂ hv ↦ by sorry
+def VecToInt' (k : Fin d) : Vec' d q → ℤ := fun v ↦ VecToInt (VecTruncate v k)
 
 lemma VecToIntZero (v : Vec' 0 q) : VecToInt v = 0 := rfl
 
