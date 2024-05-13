@@ -14,7 +14,7 @@ set_option autoImplicit false
 
 variable (d : ℕ)
 
-noncomputable def q : ℝ := 2 / sqrt 3
+noncomputable def q : ℝ := 2 / √3
 
 lemma q_pos : 0 < q := div_pos zero_lt_two $ (sqrt_pos.mpr zero_lt_three)
 
@@ -27,22 +27,22 @@ theorem q_lt_2 : q < 2 := by
   norm_num
 
 theorem pow_div_pow_eventuallyEq_atTop' {p q : ℝ} :
-    (fun x : ℝ => x ^ p / x ^ q) =ᶠ[atTop] fun x => x ^ (p - q) := by
-  apply (eventually_gt_atTop 0).mono fun x hx => _
+    (fun x : ℝ ↦ x ^ p / x ^ q) =ᶠ[atTop] fun x ↦ x ^ (p - q) := by
+  apply (eventually_gt_atTop 0).mono fun x hx ↦ _
   intro x hx
   simp_rw [Real.rpow_sub hx p q]
 
-theorem tendsto_pow_div_pow_atTop_zero' {p q : ℝ}
-    (hpq : p < q) : Tendsto (fun x : ℝ => x ^ p / x ^ q) atTop (𝓝 0) := by
-  rw [tendsto_congr' pow_div_pow_eventuallyEq_atTop']
-  /- apply tendsto_rpow_neg_atTop -/
-  sorry
+theorem tendsto_pow_div_pow_atTop {p q : ℝ}
+    (hpq : p < q) : Tendsto (fun x : ℝ ↦ x ^ p / x ^ q) atTop (𝓝 0) := by
+  apply Tendsto.congr' (eventually_atTop.mpr ⟨1, fun x hx ↦ ?_⟩)
+    (tendsto_rpow_neg_atTop (y := q - p) (by linarith))
+  simp [rpow_sub (by linarith : 0 < x)]
 
 /- Testing asymptotics API -/
 theorem q_asymptotics : (fun n : ℝ ↦ n ^ q) =o[atTop] fun n ↦ (n ^ 2 : ℝ) := by
   apply (isLittleO_iff_tendsto' ?_).mpr
   · simp_rw [←Real.rpow_two]
-    apply tendsto_pow_div_pow_atTop_zero' q_lt_2
+    apply tendsto_pow_div_pow_atTop q_lt_2
   · rw [eventually_atTop]
     exact ⟨1, fun _ _ h ↦ by simp at h; subst h; apply zero_rpow (_root_.ne_of_gt q_pos) ⟩
 
