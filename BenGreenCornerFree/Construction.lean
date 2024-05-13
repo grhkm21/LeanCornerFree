@@ -8,7 +8,7 @@ namespace BenGreen.Construction
 open Int Finset BigOperators
 
 /- Make sure this fails because of autoImplicit=false -/
-example : a + 1 = 2 := by sorry
+/- example : a + 1 = 2 := by sorry -/
 
 -- Before anything, let us check out the space ℤ_q^d
 #check Module
@@ -65,6 +65,10 @@ lemma VecToInt_mod_q {v : Vec' d q} (hd : 0 < d) :
   rw [sum_modEq_sum_mod]
   simp [this]
 
+theorem Int.emod_eq_self {a b : ℤ} (ha : 0 ≤ a) (ha' : a < b) : a % b = a := by
+  have : a / b = 0 := Int.ediv_eq_zero_of_lt ha ha'
+  rw [emod_def, this, mul_zero, sub_zero]
+
 #check Nat.ofDigits
 def VecToInt : Vec' d q ↪ ℤ where
   toFun := fun v ↦ ∑ i, v.val i * q ^ i.val
@@ -75,8 +79,8 @@ def VecToInt : Vec' d q ↪ ℤ where
       have := congrArg (fun x : ℤ ↦ x % q) hv
       simp_rw [VecToInt_mod_q hi] at this
       convert this
-      · rw [mod_eq_self]
-      · done
+      · exact (Int.emod_eq_self (v₁.prop.left _) (v₁.prop.right _)).symm
+      · exact (Int.emod_eq_self (v₂.prop.left _) (v₂.prop.right _)).symm
     | succ n ih => sorry
 
 /- Integer after dropping first d' elements -/
@@ -116,9 +120,7 @@ lemma aux1 (v : Vec' d q) (k : Fin d) (hk : 0 < k.val) {h h'} :
 lemma VecToInt_eq_first_add_truncate (v : Vec' d q) (k : Fin d) (hk : k.val + 1 < d) :
     VecToInt' k v = v.val k + q * VecToInt' ⟨_, hk⟩ v := by
   simp [VecToInt', VecToInt, VecTruncate]
-  have : ∃ k' : Fin d, d - k = k' := by sorry
-  obtain ⟨k', hk'⟩ := this
-  -- rw [aux1 v k']
+  simp_rw [mul_comm (q : ℤ), sum_mul, mul_assoc _ _ (q : ℤ), ← pow_succ]
   sorry
 
 def VecPairToInt : Vec' d q × Vec' d q ↪ ℤ × ℤ where
@@ -159,13 +161,35 @@ lemma VecEqMod' (v : Vec' d.succ q) : v.val 0 ≡ VecToInt v [ZMOD q] := VecEqMo
 
 /- --------------------------------------------------------------------------- -/
 
+lemma sum_sq_eq_zero {α β : Type*} [LinearOrderedSemiring β] [ExistsAddOfLE β]
+    {f : α → β} {s : Finset α} : ∑ x in s, f x ^ 2 = 0 ↔ ∀ x ∈ s, f x = 0 := by
+  constructor <;> intro h
+  · contrapose! h
+    obtain ⟨x, ⟨hx₁, hx₂⟩⟩ := h
+    have := lt_of_le_of_ne (sq_nonneg _) (Ne.symm (sq_eq_zero_iff.not.mpr hx₂))
+    exact (sum_pos' (fun _ _ ↦ sq_nonneg _) ⟨x, ⟨hx₁, this⟩⟩).ne.symm
+  · rw [sum_congr rfl (g := fun _ ↦ 0) (by simpa using h), sum_const, nsmul_zero]
+
 /- The Mathlib norm requires us to work with real numbers :( -/
+/- TODO: Switch to using inner products ⟪⟫ -/
 def norm' (v : Vec d) : ℤ := ∑ i, (v i) ^ 2
+
+lemma norm'_zero : norm' (0 : Vec d) = 0 := by simp [norm']
 
 lemma norm'_nonneg (v : Vec d) : 0 ≤ norm' v := sum_nonneg (fun _ _ ↦ sq_nonneg _)
 
+lemma norm'_eq_zero_iff (v : Vec d) : norm' v = 0 ↔ v = 0 :=
+  ⟨fun h ↦ by rw [norm'] at h; ext i; exact sum_sq_eq_zero.mp h _ (mem_univ _),
+   fun h ↦ by subst h; exact norm'_zero⟩
+
 @[simp] abbrev IsInCons (r : ℕ) (x y : Vec' d q) : Prop :=
     norm' (x.val - y.val) = r ∧ (q ≤ 2 * (x.val + y.val) ∧ 2 * (x.val + y.val) + 1 ≤ 3 * q)
+
+/- As a consequence, this is easier to prove -/
+theorem parallelogram_law_with_norm' (x y : Vec d) :
+    norm' (x + y) + norm' (x - y) = 2 * (norm' x + norm' y) := by
+  simp_rw [norm', two_mul, ← sum_add_distrib, Pi.add_apply, Pi.sub_apply]
+  exact sum_congr rfl fun _ _ ↦ by ring_nf
 
 instance : DecidablePred (@IsInCons d q r).uncurry := by
   intro ⟨x, y⟩
@@ -229,11 +253,12 @@ theorem part1 : AddCornerFree ((@A d q r).map VecPairToInt : Set (ℤ × ℤ)) :
   have h₃ : norm' (x.val - yd.val) = r := (mem_A_iff.mp hdy₁).left
 
   /- (0.2): We claim that ... -/
-  have : xd.val + y.val = x.val + yd.val := by
+  have : xd.val - x.val = yd.val - y.val := by
+    rw [sub_eq_sub_iff_add_eq_add]
     ext i
     induction' i using Fin.induction with i hi
     · simp only [Pi.add_apply, Pi.natCast_def]
-      have h_bound : |(xd.val 0 + y.val 0) - (x.val 0 + yd.val 0)| < q := by
+      have h_bound : |(xd.val 0 + y.val 0) - (yd.val 0 + x.val 0)| < q := by
         have h₁ := (mem_A_iff.mp hdx₁).right.left 0
         have h₂ := (mem_A_iff.mp hdx₁).right.right 0
         have h₃ := (mem_A_iff.mp hdy₁).right.left 0
@@ -241,22 +266,25 @@ theorem part1 : AddCornerFree ((@A d q r).map VecPairToInt : Set (ℤ × ℤ)) :
         simp at h₁ h₂ h₃ h₄
         rw [abs_lt]
         constructor <;> linarith
-      have h_modeq : (xd.val 0 + y.val 0) - (x.val 0 + yd.val 0) ≡ 0 [ZMOD q] := by
+      have h_modeq : (xd.val 0 + y.val 0) - (yd.val 0 + x.val 0) ≡ 0 [ZMOD q] := by
         rw [ModEq,
           ((VecEqMod' xd).add_right _).sub_right, ((VecEqMod' y).add_left _).sub_right,
-          ((VecEqMod' x).add_right _).sub_left, ((VecEqMod' yd).add_left _).sub_left,
-          hx, hy, hdx, hdy, add_comm im_y, ← add_assoc]
+          ((VecEqMod' yd).add_right _).sub_left, ((VecEqMod' x).add_left _).sub_left,
+          hx, hy, hdx, hdy]
         ring_nf
       simpa [sub_eq_zero] using eq_zero_of_modEq_zero_of_abs_lt h_bound h_modeq
     · sorry
 
-  sorry
+  have hp := parallelogram_law_with_norm' (x.val - y.val) (xd.val - x.val)
+  rw [sub_add_sub_cancel', h₂, this, sub_sub_sub_cancel_right, h₃, h₁, mul_add, two_mul] at hp
+  simp [norm'_eq_zero_iff, sub_eq_zero] at hp
+  have hp' : yd = y := by ext; rw [hp]
+  subst hp'
+  omega
 
-@[elab_as_elim] def induction {n : ℕ} {motive : Fin (n + 1) → Sort _} (zero : motive 0)
-    (succ : ∀ i : Fin n, motive i.castSucc → motive i.succ) :
-    ∀ i : Fin (n + 1), motive i
-  | ⟨0, hi⟩ => by rwa [Fin.mk_zero]
-  | ⟨i+1, hi⟩ => succ ⟨i, Nat.lt_of_succ_lt_succ hi⟩ (induction zero succ ⟨i, Nat.lt_of_succ_lt hi⟩)
+example {a b c : ℝ} : (a - b) + (c - a) = c - b := by rw?
+
+#check parallelogram_law
 
 def v : Vec' 3 5 := VecEquivFun.invFun ![2, 4, 1]
 #eval v
