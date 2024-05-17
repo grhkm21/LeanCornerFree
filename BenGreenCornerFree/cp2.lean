@@ -9,8 +9,8 @@ variable {c : ℝ} (hc : 1 < c) (f : ℕ → ℝ) (hf : f =o[atTop] (fun _ ↦ 1
 
 /- Step 1: Rewrite log (c + o(1)) to log(c) + log(1 + o(1)) -/
 lemma aux1 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
-    (fun N : ℕ ↦ sqrt (log N / log (c + f N)))
-      =ᶠ[atTop] (fun N : ℕ ↦ sqrt (log N / (log c + log (1 + g N)))) := by
+    (fun N : ℕ ↦ √(log N / log (c + f N)))
+      =ᶠ[atTop] (fun N : ℕ ↦ √(log N / (log c + log (1 + g N)))) := by
   use fun N ↦ f N / c
   constructor
   · rw [isLittleO_one_iff] at hf ⊢
@@ -30,8 +30,8 @@ lemma aux1 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
 
 /- Step 2: Rewrite log (1 + o(1)) to o(1) -/
 lemma aux2 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
-    (fun N : ℕ ↦ sqrt (log N / log (c + f N)))
-      =ᶠ[atTop] (fun N : ℕ ↦ sqrt (log N / (log c + g N))) := by
+    (fun N : ℕ ↦ √(log N / log (c + f N)))
+      =ᶠ[atTop] (fun N : ℕ ↦ √(log N / (log c + g N))) := by
   obtain ⟨g, hg, hg'⟩ := aux1 hc f hf
   use fun N ↦ log (1 + g N), ?_, hg'
   rw [isLittleO_one_iff] at hg ⊢
@@ -41,8 +41,8 @@ lemma aux2 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
 
 /- Step 3: Isolate asymptotic term from constant factor -/
 lemma aux3 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
-    (fun N : ℕ ↦ sqrt (log N / log (c + f N)))
-      =ᶠ[atTop] (fun N : ℕ ↦ sqrt (1 / (1 + g N)) * sqrt (log N / log c)) := by
+    (fun N : ℕ ↦ √(log N / log (c + f N)))
+      =ᶠ[atTop] (fun N : ℕ ↦ √(1 / (1 + g N)) * √(log N / log c)) := by
   obtain ⟨g, hg, hg'⟩ := aux2 hc f hf
   use fun N ↦ g N / log c, ?_
   · rw [EventuallyEq, eventually_atTop] at hg' ⊢
@@ -61,12 +61,12 @@ lemma aux3 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
   · rw [isLittleO_one_iff] at hg ⊢
     simpa using hg.div_const (log c)
 
-/- Step 4: Rewrite sqrt (1 / (1 + o(1))) as (1 + o(1)) -/
+/- Step 4: Rewrite √(1 / (1 + o(1))) as (1 + o(1)) -/
 lemma aux4 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
-    (fun N : ℕ ↦ sqrt (log N / log (c + f N)))
-      =ᶠ[atTop] (fun N : ℕ ↦ (1 + g N) * sqrt (log N / log c)) := by
+    (fun N : ℕ ↦ √(log N / log (c + f N)))
+      =ᶠ[atTop] (fun N : ℕ ↦ (1 + g N) * √(log N / log c)) := by
   obtain ⟨g, hg, hg'⟩ := aux3 hc f hf
-  use fun N ↦ sqrt (1 / (1 + g N)) - 1, ?_
+  use fun N ↦ √(1 / (1 + g N)) - 1, ?_
   · rw [EventuallyEq, eventually_atTop] at hg' ⊢
     obtain ⟨N, hN⟩ := hg'
     simp_rw [add_sub_cancel]
@@ -76,8 +76,8 @@ lemma aux4 : ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
 
 theorem asympt2 {c : ℝ} (hc : 1 < c) : ∀ f : ℕ → ℝ, f =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) →
     ∃ g : ℕ → ℝ, g =o[atTop] (fun _ ↦ 1 : ℕ → ℝ) ∧
-      (fun N : ℕ ↦ sqrt (log N / log (c + f N)))
-        =ᶠ[atTop] (fun N ↦ (1 + g N) * sqrt (log N / log c)) := by
+      (fun N : ℕ ↦ √(log N / log (c + f N)))
+        =ᶠ[atTop] (fun N ↦ (1 + g N) * √(log N / log c)) := by
   intro f hf
   exact aux4 hc f hf
 
