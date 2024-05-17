@@ -1,8 +1,6 @@
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 
-set_option autoImplicit false
-
 /- def V (n : ℕ) := Fin n → ℤ -/
 /- #synth AddCommMonoid (V 5) -/
 /- #check Pi.addCommMonoid -/
@@ -93,8 +91,8 @@ lemma aux (c : ℝ) (hc : 1 ≤ c) :
   use f, aux_part2 c hc f hf, hf.right
 
 lemma aux' (c : ℝ) (hc : 1 ≤ c) :
-    ∃ f : ℕ → ℝ, f =o[atTop] (1 : ℕ → ℝ) ∧ (∀ᶠ d in atTop, c ^ d + 1 = (c + f d) ^ d) := by
+    ∃ f : ℕ → ℝ, f =o[atTop] (1 : ℕ → ℝ) ∧ ((fun d ↦ c ^ d + 1) =ᶠ[atTop] (fun d ↦ (c + f d) ^ d)) := by
   obtain ⟨f, hf⟩ := aux c hc
   use f, hf.left
-  simp only [eventually_atTop, ge_iff_le]
+  simp only [EventuallyEq, eventually_atTop, ge_iff_le]
   use 1, hf.right

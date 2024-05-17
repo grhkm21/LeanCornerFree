@@ -74,14 +74,11 @@ def VecToInt : Vec' d q ↪ ℤ where
   toFun := fun v ↦ ∑ i, v.val i * q ^ i.val
   inj' := fun v₁ v₂ hv ↦ by
     ext ⟨i, hi⟩
-    induction i with
-    | zero =>
-      have := congrArg (fun x : ℤ ↦ x % q) hv
-      simp_rw [VecToInt_mod_q hi] at this
-      convert this
-      · exact (Int.emod_eq_self (v₁.prop.left _) (v₁.prop.right _)).symm
-      · exact (Int.emod_eq_self (v₂.prop.left _) (v₂.prop.right _)).symm
-    | succ n ih => sorry
+    revert hi
+    induction' i using Nat.strong_induction_on with n ih
+    intro hn
+    replace ih := fun m h ↦ ih m h (h.trans hn)
+    sorry
 
 /- Integer after dropping first d' elements -/
 def VecToInt' (k : Fin d) : Vec' d q → ℤ := fun v ↦ VecToInt (VecTruncate v k)
@@ -102,9 +99,12 @@ def v₀ : Vec' 3 5 := VecEquivFun.invFun ![2, 4, 1]
 #eval VecToInt' 2 v₀
 #eval v₀.val 1 + 5 * VecToInt' ⟨2, by omega⟩ v₀
 
-lemma aux1 (v : Vec' d q) (k : Fin d) (hk : 0 < k.val) {h h'} :
+/-
+[2,4,1] [4,1] [1]
+-/
+lemma aux1 (v : Vec' d q) (k : Fin d) (hk : 0 < k.val) (h h' h'') :
     ∑ x : Fin k, v.val (Fin.cast h (Fin.addNat x (d - k))) * q ^ x.val =
-      v.val k +
+      v.val ⟨d - k, h''⟩ +
         q * ∑ x : Fin (k - 1), v.val (Fin.cast h' (Fin.addNat x ((d - k) + 1))) * q ^ x.val := by
   obtain ⟨d', rfl⟩ := Nat.exists_eq_add_of_le' (by omega : 0 < d)
   cases' Fin.eq_zero_or_eq_succ k with hk' hk'
@@ -112,16 +112,33 @@ lemma aux1 (v : Vec' d q) (k : Fin d) (hk : 0 < k.val) {h h'} :
   · obtain ⟨k, rfl⟩ := hk'
     simp only [Fin.val_succ, Nat.reduceSucc, Pi.natCast_def, Nat.add_succ_sub_one, Nat.add_zero] at *
     rw [Fin.sum_univ_succ, Fin.val_zero, pow_zero, mul_one]
-    congr 1
-    · sorry
-    · sorry
+    congr! 1
+    · congr!
+      simp_rw [Fin.coe_cast, Fin.coe_addNat, ← Nat.one_eq_succ_zero, Fin.succ, Fin.val_zero,
+        zero_add] at h ⊢
+    · simp_rw [mul_comm (q : ℤ), sum_mul, mul_assoc, ← pow_succ]
+      congr! 3 with i _
+      ext
+      simp
+      omega
+
+lemma aux1' (v : Vec' d q) (k : Fin d) (hd : 0 < d) (hk : 0 < k.val) (h h' h'') :
+    ∑ x : Fin (d - k), v.val (Fin.cast h (Fin.addNat x k)) * q ^ x.val =
+      v.val ⟨k, h''⟩ +
+        q * ∑ x : Fin (d - k - 1), v.val (Fin.cast h' (Fin.addNat x (k + 1))) * q ^ x.val := by
+  have h1 := Nat.sub_sub_self h''.le
+  have : 0 < d - k.val := by linarith
+  have := by
+    refine aux1 v ⟨d - k.val, Nat.sub_lt hd hk⟩ (by simp [this]) (by omega) ?_ ?_
+    · simp; convert h'
+    · simp; convert h''
+  convert this <;> simpa using h1.symm
 
 /- The naming scheme is horrible -/
-lemma VecToInt_eq_first_add_truncate (v : Vec' d q) (k : Fin d) (hk : k.val + 1 < d) :
-    VecToInt' k v = v.val k + q * VecToInt' ⟨_, hk⟩ v := by
+lemma VecToInt_eq_first_add_truncate (v : Vec' d q) (k) (h : k.val < d) (h' : 0 < k.val) (h'') :
+    VecToInt' k v = v.val ⟨k, h⟩ + q * VecToInt' ⟨k.val + 1, h''⟩ v := by
   simp [VecToInt', VecToInt, VecTruncate]
-  simp_rw [mul_comm (q : ℤ), sum_mul, mul_assoc _ _ (q : ℤ), ← pow_succ]
-  sorry
+  convert aux1' v k ?_ h' ?_ ?_ ?_ <;> omega
 
 def VecPairToInt : Vec' d q × Vec' d q ↪ ℤ × ℤ where
   toFun := fun ⟨v₁, v₂⟩ ↦ ⟨VecToInt v₁, VecToInt v₂⟩
