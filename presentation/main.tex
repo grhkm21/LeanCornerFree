@@ -1,0 +1,80 @@
+\documentclass{beamer}
+\mode<presentation> { \setbeamercovered{transparent} }
+\usetheme{Boadilla}
+
+% instruct minted to use our local theorem.py
+% \usepackage[outputdir=build]{minted}
+% \usemintedstyle{tango}  % a nice, colorful theme
+% \setminted[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
+% \setmintedinline[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
+
+\usepackage{template}
+\usepackage{emoji}
+\addbibresource{local.bib}
+
+% \usepackage{subfiles}
+
+\title{Formalising large corner-free sets}
+\subtitle{Teaching my laptop to simplify asymptotics \sout{automatically}}
+% \author{Gareth Ma}
+\author{Gareth Ma}
+\institute{University of Warwick}
+\date{\today}
+
+\linespread{1.25}
+
+\begin{document}
+
+\titlepage
+\pagebreak
+
+\setemojifont{Apple Color Emoji}
+\setcounter{tocdepth}{1}
+
+% part 0: intro
+% formalise proof in Lean
+% come up with some cool motto or something
+\include{sec0-intro.tex}
+
+\tableofcontents
+
+% part 1: tt (section 2)
+% 1.1: introduce type theory
+% probably leave out all the judgement stuff
+% start with set theory examples, and transfer to type theory
+% give an example that's useful
+% (maybe with vector spaces etc, U -> V, V -> W)
+% oh also drop dependent type theory, seems not important
+% in turn, also ignore the Gentzen notation stuff
+% just deal with plain functions and lemmas
+% definitely drop filters
+% and then replace U, V, W with props and go into next part
+% 1.2: curry-howard correspondence
+% p -> q \and q -> r thing to talk about functions <-> (constructive) logic
+% be brief here...
+\include{sec1-type-theory.tex}
+
+% part 2: math, corner-free sets (section 4-5)
+% first introduce the problem
+% what are corner-free sets? what is the main result?
+% sketch the proof, highlighting main points
+\include{sec2-corner-free.tex}
+
+% part 3: asymptotics (section 3)
+% blablabla
+% dot notation seems cool (p.26), maybe demo that?
+\include{sec3-asymptotics.tex}
+
+% part 4: verifying correctness via eval, decide and slim_check
+% first introduce what decidability means (in Lean)
+% simplest example is again IsSquare 37
+% talk about how IsCornerFree is made decidable
+% live demo time! #eval A (d := 2) (q := 4) 5 seems good
+% mention how it's also useful during development: slim_check
+\include{sec4-correctness.tex}
+
+% part 5: conclude
+\include{sec5-conclusion.tex}
+
+\end{document}
+
