@@ -11,9 +11,9 @@ There are many problems:
 
 \begin{itemize}
 
-\item \(3 \subseteq 17\) is a valid question.
+\item \(3 \in 17\) is a valid question.
 
-\item Russell's Paradox: \(A \in A\) holds.
+\item Russell's Paradox: \(A \in A\) holds for some \(A\).
 
 \end{itemize}
 
@@ -28,8 +28,55 @@ Slightly absurdly, the problem fundamentally stems from that \textbf{everything 
 
 \begin{exampleblock}{Idea}
 
-
+What if we separate objects into ``elements'' and ``parents''?
 
 \end{exampleblock}
+
+For example, the numbers \(3\) and \(17\) will have the type \(\N\) of natural numbers.
+
+\begin{enumerate}
+  \item \(3 \in 17\) question: An element cannot be an element of another element.
+  \item \(A \in A\) paradox: There cannot be a \(\textrm{Set}\) that is an element of another \(\textrm{Set}\).
+\end{enumerate}
+
+\end{frame}
+
+
+
+
+\subsection{Curry-Howard Correspondence}
+\begin{frame}\frametitle{\insertsubsection}
+
+\begin{block}{Function composition}
+  Let \(P, Q, R \subseteq \N\) be sets of numbers. If \(f : P \to Q\) and \(g : Q \to R\) are two functions, then we can form a function \(P \to R\).
+\end{block}
+
+\begin{proof}
+  Let \(p \in P\) be an element. Then, we can compute \(f(p) \in Q\), and hence get \(g(f(p)) \in R\), giving us the function \(g \circ f : P \to R\).
+\end{proof}
+
+\end{frame}
+
+
+
+
+\subsection{Curry-Howard Correspondence}
+\begin{frame}\frametitle{\insertsubsection}
+
+Notice the similarity between this and the example with logical statements before!
+
+\begin{block}{Transitivity}
+  Let \(P, Q, R\) be \textit{logical} statements. If \(P \implies Q\) and \(Q \implies R\), then \(P \implies R\).
+\end{block}
+
+\begin{block}{Function composition}
+  Let \(P, Q, R \subseteq \N\) be sets of numbers. If \(f : P \to Q\) and \(g : Q \to R\) are two functions, then we can form a function \(P \to R\).
+\end{block} \pause
+
+These two examples can be unified via \sout{category} type theory. \pause
+
+\begin{block}{Types}
+  Let \(P, Q, R \subseteq \N\) be sets of numbers. If \(f : P \to Q\) and \(g : Q \to R\) are two functions, then we can form a function \(P \to R\).
+\end{block} \pause
 
 \end{frame}

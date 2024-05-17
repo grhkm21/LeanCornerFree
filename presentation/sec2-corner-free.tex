@@ -1,6 +1,32 @@
 %! TEX root = main.tex
 
+\section{Corner-free Sets}
+
 \begin{frame}\frametitle{\insertsubsection}
+
+\begin{block}{Corner-free sets}
+
+  A set \(S \subseteq \Z^2\) is a corner-free set if for all \(x, y, d \in \Z\),
+
+\[
+  \{(x, y), (x, y + d), (x + d, y)\} \subseteq \S \implies d = 0
+\]
+
+\end{block}
 
 \end{frame}
 
+
+\begin{frame}\frametitle{\insertsubsection}
+
+Apart from corner-free sets, \(3\)-AP-free sets are also commonly studied in extremal combinatorics. In my essay, I unified the approaches taken to construct the state-of-the-art lower bounds for both structures. For corner-free sets, an outline is given as follows:
+
+\begin{enumerate}
+  \item Constructing an appropriate corner-free ``two-dimensional'' additive semiring \(X = X_{r, q, d} \subseteq \Z_q^d \times \Z_q^d\) with special properties, parametrised by certain parameters \(r, q, d\);
+  \item Use the naive embedding \(\zeta : \Z_q^d \to \Z\) by parsing vectors as base-\(q\) digits of integers;
+  \item Prove that for \((\zeta(x), \zeta(y)), (\zeta(x'), \zeta(y)), (\zeta(x), \zeta(y')) \in \widetilde{\zeta}(X)\), \(\zeta(x') + \zeta(y) = \zeta(x) + \zeta(y') \implies x' + y = x + y'\) (using the special properties of construction);
+  \item Conclude that \(\widetilde{\zeta}(X)\) is also cornerfree;
+  \item Optimise parameters.
+\end{enumerate}
+
+\end{frame}
