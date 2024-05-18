@@ -3,10 +3,10 @@
 \usetheme{Boadilla}
 
 % instruct minted to use our local theorem.py
-\usepackage[outputdir=build]{minted}
-\usemintedstyle{tango}  % a nice, colorful theme
-\setminted[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
-\setmintedinline[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
+% \usepackage[outputdir=build]{minted}
+% \usemintedstyle{tango}  % a nice, colorful theme
+% \setminted[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
+% \setmintedinline[lean]{bgcolor=white!83!black, fontsize=\footnotesize}
 
 \usepackage{template}
 \usepackage{emoji}
@@ -59,21 +59,20 @@
 % sketch the proof, highlighting main points
 \include{sec2-corner-free.tex}
 
-% part 3: asymptotics (section 3)
+%% part -: asymptotics (section 3)
 % blablabla
 % dot notation seems cool (p.26), maybe demo that?
-\include{sec3-asymptotics.tex}
 
-% part 4: verifying correctness via eval, decide and slim_check
+% part 3: verifying correctness via eval, decide and slim_check
 % first introduce what decidability means (in Lean)
 % simplest example is again IsSquare 37
 % talk about how IsCornerFree is made decidable
 % live demo time! #eval A (d := 2) (q := 4) 5 seems good
 % mention how it's also useful during development: slim_check
-\include{sec4-correctness.tex}
+\include{sec3-correctness.tex}
 
-% part 5: conclude
-\include{sec5-conclusion.tex}
+% part 4: conclude
+\include{sec4-conclusion.tex}
 
 \end{document}
 

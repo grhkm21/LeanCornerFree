@@ -1,7 +1,7 @@
 import Mathlib.Tactic
 import Mathlib.Data.List.ToFinsupp
 
-import BenGreenCornerFree.CornerFree
+import BenGreenCornerFree.Defs
 
 namespace BenGreen.Construction
 

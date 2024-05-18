@@ -1,3 +1,3 @@
--- This module serves as the root of the `BenGreenCornerFree` library.
--- Import modules here that should be built as part of the library.
-import «BenGreenCornerFree».Basic
+/- import BenGreenCornerFree.Asymptotics -/
+import BenGreenCornerFree.Bridge
+import BenGreenCornerFree.Construction

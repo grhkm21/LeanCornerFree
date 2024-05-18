@@ -1,4 +1,4 @@
 import BenGreenCornerFree
 
-def main : IO Unit :=
-  IO.println s!"Hello, {ok}!"
+def main : IO Unit := do
+  return 0
