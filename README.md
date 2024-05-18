@@ -5,11 +5,11 @@ For my third year project, I formalised Ben Green's 2021 result ["Lower bounds f
 This project is organised as follows:
 
 - `BenGreenCornerFree` contains the (almost finished) formalised Lean project. It is split into ABCD parts:
-    - [ ] `Asymptotics{1,2,3}.lean`: Simplifying asymptotics of the construction size after parameter choice
-    - [ ] `Bridge.lean`: Computing upper bound of construction size via PHP (Pigeon-Hole Principle)
-    - [ ] `Construction.lean`: Defining the construction
-    - [ ] `Defs.lean`: Definition of `AddCornerFree`
-    - [ ] Missing: Proving a single statement that says "there exists a corner-free set of size xxx"
+    - [X] `Asymptotics{1,2,3}.lean`: Simplifying asymptotics of the construction size after parameter choice
+    - [X] `Bridge.lean`: Computing upper bound of construction size via PHP (Pigeon-Hole Principle)
+    - [X] `Construction.lean`: Defining the construction
+    - [X] `Defs.lean`: Definition of `AddCornerFree`
+    - [ ] Missing: Proving a *single* statement that says "there exists a corner-free set of size xxx"
 - `details` contains a scratchpad-blueprint
 - `essay/main-submitted.pdf`: My submitted essay (32 pages, commit: `cd1252f6`)
 - `presentation/main.pdf` contains my presentation
