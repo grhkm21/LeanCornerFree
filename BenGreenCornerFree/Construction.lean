@@ -69,7 +69,25 @@ theorem Int.emod_eq_self {a b : ℤ} (ha : 0 ≤ a) (ha' : a < b) : a % b = a :=
   have : a / b = 0 := Int.ediv_eq_zero_of_lt ha ha'
   rw [emod_def, this, mul_zero, sub_zero]
 
-#check Nat.ofDigits
+lemma aux (f : Fin d → ℤ) (g : ℤ) (k : Fin d) (N : ℤ)
+    (hf : (∑ n, if n = k then g else f n) ≡ (∑ n, f n) [ZMOD N]) : g ≡ f k [ZMOD N] := by
+  have {g : Fin d → ℤ} : (∑ n, g n) = g k + (∑ n, if n = k then 0 else g n) := by
+    simp_rw [Fintype.sum_eq_add_sum_compl k, if_true, zero_add]
+    congr 1
+    apply sum_congr rfl fun x hx ↦ ?_
+    simp at hx
+    simp [hx]
+  conv_lhs at hf => rw [this]
+  conv_rhs at hf => rw [this]
+  simp at hf
+  have (n : Fin d) :
+      (if n = k then 0 else if n = k then g else f n) = if n = k then 0 else f n := by
+    split_ifs <;> simp
+  simp_rw [this] at hf
+  exact hf.add_right_cancel' _
+
+variable (hq : 0 < q)
+
 def VecToInt : Vec' d q ↪ ℤ where
   toFun := fun v ↦ ∑ i, v.val i * q ^ i.val
   inj' := fun v₁ v₂ hv ↦ by
@@ -78,26 +96,79 @@ def VecToInt : Vec' d q ↪ ℤ where
     induction' i using Nat.strong_induction_on with n ih
     intro hn
     replace ih := fun m h ↦ ih m h (h.trans hn)
-    sorry
+    have hmod := congrArg (fun a : ℤ ↦ a % q ^ (n + 1)) hv
+    simp only [Pi.natCast_def] at hmod
+    conv_lhs at hmod => rw [Finset.sum_int_mod]
+    conv_rhs at hmod => rw [Finset.sum_int_mod]
+    have hd (i : Fin d) :
+        (v₁.val i * (q : ℤ) ^ i.val) % ((q : ℤ) ^ (n + 1))
+          = if i = ⟨n, hn⟩ then v₁.val ⟨n, hn⟩ * (q : ℤ) ^ n
+              else (v₂.val i * (q : ℤ) ^ i.val) % ((q : ℤ) ^ (n + 1)) := by
+      split_ifs with hi
+      · subst hi
+        have : v₁.val ⟨n, hn⟩ < q := by simpa using v₁.prop.right _
+        rw [Int.emod_eq_of_lt]
+        · apply mul_nonneg
+          · exact v₁.prop.left _
+          · positivity
+        · apply lt_of_lt_of_le (b := (q : ℤ) * (q : ℤ) ^ n)
+          · gcongr
+          · nth_rw 1 [← pow_one q, Nat.cast_pow, ← pow_add]
+            gcongr (q : ℤ) ^ ?_ <;> linarith
+      · by_cases hi : i < ⟨n, hn⟩
+        · rw [← ih i ‹_›]
+        · have hi : i > ⟨n, hn⟩ := by omega
+          have : (q : ℤ) ^ (n + 1) ∣ (q : ℤ) ^ i.val := pow_dvd_pow (q : ℤ) hi
+          trans 0
+          · rw [← Int.dvd_iff_emod_eq_zero]
+            exact dvd_mul_of_dvd_right this _
+          · rw [eq_comm, ← Int.dvd_iff_emod_eq_zero]
+            exact dvd_mul_of_dvd_right this _
+    simp_rw [hd] at hmod
+    have := aux _ (v₁.val ⟨n, hn⟩ * (q : ℤ) ^ n) ⟨n, hn⟩ _ hmod
+    rw [Int.emod_eq_of_lt] at this
+    · change (_ % _) = (_ % _) at this
+      rw [Int.emod_eq_of_lt, Int.emod_eq_of_lt] at this
+      · simp [hq.ne.symm] at this
+        exact this
+      · apply mul_nonneg
+        · exact v₂.prop.left _
+        · positivity
+      · have : v₂.val ⟨n, hn⟩ < q := by simpa using v₂.prop.right ⟨n, hn⟩
+        apply lt_of_lt_of_le (b := (q : ℤ) * (q : ℤ) ^ n)
+        · gcongr
+        · rw [pow_add, pow_one, mul_comm]
+      · apply mul_nonneg
+        · exact v₁.prop.left _
+        · positivity
+      · have : v₁.val ⟨n, hn⟩ < q := by simpa using v₁.prop.right ⟨n, hn⟩
+        apply lt_of_lt_of_le (b := (q : ℤ) * (q : ℤ) ^ n)
+        · gcongr
+        · rw [pow_add, pow_one, mul_comm]
+    · apply mul_nonneg
+      · exact v₂.prop.left _
+      · positivity
+    · have : v₂.val ⟨n, hn⟩ < q := by simpa using v₂.prop.right ⟨n, hn⟩
+      apply lt_of_lt_of_le (b := (q : ℤ) * (q : ℤ) ^ n)
+      · gcongr
+      · rw [pow_add, pow_one, mul_comm]
 
 /- Integer after dropping first d' elements -/
-def VecToInt' (k : Fin d) : Vec' d q → ℤ := fun v ↦ VecToInt (VecTruncate v k)
+def VecToInt' (k : Fin d) : Vec' d q → ℤ := fun v ↦ VecToInt hq (VecTruncate v k)
 
-lemma VecToIntZero (v : Vec' 0 q) : VecToInt v = 0 := rfl
+lemma VecToIntZero (v : Vec' 0 q) : VecToInt hq v = 0 := rfl
 
-lemma VecToInt'Zero (hd : 0 < d) : @VecToInt' d q ⟨0, hd⟩ = VecToInt := by
+lemma VecToInt'Zero (hd : 0 < d) : @VecToInt' d q hq ⟨0, hd⟩ = VecToInt hq := by
   ext a
   simp [VecToInt', VecToInt]
   exact sum_congr (by ext a; simp [Fin.le_iff_val_le_val]) (fun _ _ ↦ rfl)
 
 def v₀ : Vec' 3 5 := VecEquivFun.invFun ![2, 4, 1]
-#eval v₀.val ⟨0, by omega⟩
-#eval v₀.val ⟨1, by omega⟩
-#eval v₀.val ⟨2, by omega⟩
-#eval VecToInt' 0 v₀
-#eval VecToInt' 1 v₀
-#eval VecToInt' 2 v₀
-#eval v₀.val 1 + 5 * VecToInt' ⟨2, by omega⟩ v₀
+#eval! VecToInt (by decide) v₀
+#eval! VecToInt' (by decide) 0 v₀
+#eval! VecToInt' (by decide) 1 v₀
+#eval! VecToInt' (by decide) 2 v₀
+#eval! v₀.val 1 + 5 * VecToInt' (by decide) ⟨2, by decide⟩ v₀
 
 /-
 [2,4,1] [4,1] [1]
@@ -114,8 +185,7 @@ lemma aux1 (v : Vec' d q) (k : Fin d) (hk : 0 < k.val) (h h' h'') :
     rw [Fin.sum_univ_succ, Fin.val_zero, pow_zero, mul_one]
     congr! 1
     · congr!
-      simp_rw [Fin.coe_cast, Fin.coe_addNat, ← Nat.one_eq_succ_zero, Fin.succ, Fin.val_zero,
-        zero_add] at h ⊢
+      simp_rw [Fin.coe_cast, Fin.coe_addNat, Fin.succ, Fin.val_zero, zero_add] at h ⊢
     · simp_rw [mul_comm (q : ℤ), sum_mul, mul_assoc, ← pow_succ]
       congr! 3 with i _
       ext
@@ -130,22 +200,22 @@ lemma aux1' (v : Vec' d q) (k : Fin d) (hd : 0 < d) (hk : 0 < k.val) (h h' h'') 
   have : 0 < d - k.val := by linarith
   have := by
     refine aux1 v ⟨d - k.val, Nat.sub_lt hd hk⟩ (by simp [this]) (by omega) ?_ ?_
-    · simp; convert h'
-    · simp; convert h''
+    · simp; omega
+    · simp [hd]
   convert this <;> simpa using h1.symm
 
 /- The naming scheme is horrible -/
 lemma VecToInt_eq_first_add_truncate (v : Vec' d q) (k) (h : k.val < d) (h' : 0 < k.val) (h'') :
-    VecToInt' k v = v.val ⟨k, h⟩ + q * VecToInt' ⟨k.val + 1, h''⟩ v := by
+    VecToInt' hq k v = v.val ⟨k, h⟩ + q * VecToInt' hq ⟨k.val + 1, h''⟩ v := by
   simp [VecToInt', VecToInt, VecTruncate]
   convert aux1' v k ?_ h' ?_ ?_ ?_ <;> omega
 
 def VecPairToInt : Vec' d q × Vec' d q ↪ ℤ × ℤ where
-  toFun := fun ⟨v₁, v₂⟩ ↦ ⟨VecToInt v₁, VecToInt v₂⟩
+  toFun := fun ⟨v₁, v₂⟩ ↦ ⟨VecToInt hq v₁, VecToInt hq v₂⟩
   inj' := fun ⟨a, b, c, d⟩ hv ↦ by simp; intro h₁ h₂; simp only [h₁, h₂]
 
 lemma VecPairEquivInterval_eq_iff {u v : Vec' d q} {a b : ℤ} :
-    VecPairToInt ⟨u, v⟩ = ⟨a, b⟩ ↔ VecToInt u = a ∧ VecToInt v = b := by
+    VecPairToInt hq ⟨u, v⟩ = ⟨a, b⟩ ↔ VecToInt hq u = a ∧ VecToInt hq v = b := by
   rw [VecPairToInt, Function.Embedding.coeFn_mk, Prod.mk.injEq]
 
 /- This is necessary since subst doesn't work for expressions or lets -/
@@ -157,7 +227,7 @@ lemma aux2 {m n d k q : ℕ} (f : Fin d → ℤ) (h h') :
   rfl
 
 lemma VecEqMod (v : Vec' d q) (k : Fin d) :
-    v.val k ≡ VecToInt' k v [ZMOD q] := by
+    v.val k ≡ VecToInt' hq k v [ZMOD q] := by
   simp only [VecToInt', Int.modEq_iff_dvd, VecTruncate, VecToInt, Pi.natCast_def,
     Function.Embedding.coeFn_mk]
   have : 0 < d - k := have := k.prop; by omega
@@ -174,7 +244,7 @@ lemma VecEqMod (v : Vec' d q) (k : Fin d) :
     have {h} : Fin.cast h (Fin.addNat (0 : Fin (t + 1)) k.val) = k := by ext; simp
     rw [sub_eq_zero, this]
 
-lemma VecEqMod' (v : Vec' d.succ q) : v.val 0 ≡ VecToInt v [ZMOD q] := VecEqMod v _
+lemma VecEqMod' (v : Vec' d.succ q) : v.val 0 ≡ VecToInt hq v [ZMOD q] := VecEqMod hq v _
 
 /- --------------------------------------------------------------------------- -/
 
@@ -225,13 +295,13 @@ def A (r : ℕ) : Finset (Vec' d q × Vec' d q) := univ.filter (IsInCons r).uncu
 
 #check Nat.ofDigits
 #eval (A (d := 2) (q := 3) 5)
-#eval (univ : Finset (Vec' 2 5)).map VecToInt
-#eval (A (d := 2) (q := 3) 5).map VecPairToInt
-#eval AddCornerFree ((A (d := 2) (q := 3) 5).map VecPairToInt : Set (ℤ × ℤ))
+#eval (univ : Finset (Vec' 2 5)).map (VecToInt (by decide))
+#eval (A (d := 2) (q := 3) 5).map (VecPairToInt (by decide))
+#eval AddCornerFree ((A (d := 2) (q := 3) 5).map (VecPairToInt (by decide)) : Set (ℤ × ℤ))
 
 /- --------------------------------------------------------------------------- -/
 
-example {v : Vec' d.succ q} : v.val 0 ≡ VecToInt v [ZMOD q] := ModEq.trans (VecEqMod v 0) rfl
+example {v : Vec' d.succ q} : v.val 0 ≡ VecToInt hq v [ZMOD q] := VecEqMod hq v 0
 
 /- --------------------------------------------------------------------------- -/
 
@@ -243,14 +313,14 @@ lemma eq_zero_of_modEq_zero_of_abs_lt {a : ℤ} {q : ℕ}
   rw [abs_lt_one_iff.mp $ (mul_lt_iff_lt_one_right (Nat.cast_pos.mpr this)).mp h_bound, mul_zero]
 
 /- Concluding theorem -/
-theorem part1 : AddCornerFree ((@A d q r).map VecPairToInt : Set (ℤ × ℤ)) := by
+theorem part1 : AddCornerFree ((@A d q r).map (VecPairToInt hq) : Set (ℤ × ℤ)) := by
   intro im_x im_y im_d hd hdx hdy
   obtain ⟨⟨x, y⟩, ⟨hd₁, hd₂⟩⟩ := mem_map.mp $ mem_coe.mp hd
   obtain ⟨⟨xd, y'⟩, ⟨hdx₁, hdx₂⟩⟩ := mem_map.mp $ mem_coe.mp hdx
   obtain ⟨⟨x', yd⟩, ⟨hdy₁, hdy₂⟩⟩ := mem_map.mp $ mem_coe.mp hdy
   rw [VecPairEquivInterval_eq_iff] at hd₂ hdx₂ hdy₂
-  have hx_equal : x = x' := VecToInt.injective (hd₂.left.trans hdy₂.left.symm)
-  have hy_equal : y = y' := VecToInt.injective (hd₂.right.trans hdx₂.right.symm)
+  have hx_equal : x = x' := (VecToInt hq).injective (hd₂.left.trans hdy₂.left.symm)
+  have hy_equal : y = y' := (VecToInt hq).injective (hd₂.right.trans hdx₂.right.symm)
   subst hy_equal hx_equal
   clear hd hdx hdy
 
@@ -285,8 +355,8 @@ theorem part1 : AddCornerFree ((@A d q r).map VecPairToInt : Set (ℤ × ℤ)) :
         constructor <;> linarith
       have h_modeq : (xd.val 0 + y.val 0) - (yd.val 0 + x.val 0) ≡ 0 [ZMOD q] := by
         rw [ModEq,
-          ((VecEqMod' xd).add_right _).sub_right, ((VecEqMod' y).add_left _).sub_right,
-          ((VecEqMod' yd).add_right _).sub_left, ((VecEqMod' x).add_left _).sub_left,
+          ((VecEqMod' hq xd).add_right _).sub_right, ((VecEqMod' hq y).add_left _).sub_right,
+          ((VecEqMod' hq yd).add_right _).sub_left, ((VecEqMod' hq x).add_left _).sub_left,
           hx, hy, hdx, hdy]
         ring_nf
       simpa [sub_eq_zero] using eq_zero_of_modEq_zero_of_abs_lt h_bound h_modeq
@@ -305,9 +375,9 @@ example {a b c : ℝ} : (a - b) + (c - a) = c - b := by rw?
 
 def v : Vec' 3 5 := VecEquivFun.invFun ![2, 4, 1]
 #eval v
-#eval VecToInt' 0 v
-#eval VecToInt' 1 v
-#eval VecToInt' 2 v
+#eval VecToInt' (by decide) 0 v
+#eval VecToInt' (by decide) 1 v
+#eval VecToInt' (by decide) 2 v
 def i : Fin 3 := 2
 #eval i
 #eval Fin.succ i

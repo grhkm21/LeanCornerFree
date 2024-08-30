@@ -8,7 +8,9 @@ open scoped BigOperators
 
 namespace BenGreen
 
-variable {α : Type*} [DecidableEq α] [CommGroup α] {s t : Finset α}
+section
+
+variable {α : Type*} [CommGroup α] {s t : Finset α}
 
 /-
 Main reference: https://arxiv.org/pdf/2102.11702.pdf
@@ -18,7 +20,6 @@ Main reference: https://arxiv.org/pdf/2102.11702.pdf
 def MulCornerFree (s : Set (α × α)) : Prop :=
   ∀ x y d, (x, y) ∈ s → (x * d, y) ∈ s → (x, y * d) ∈ s → d = 1
 
--- This is not computable, but is decidable
 @[to_additive "poggie"]
 def MulCornerFree' (s : Set (α × α)) : Prop :=
   ∀ x y x' y' d, (x, y) ∈ s → (x', y) ∈ s → (x, y') ∈ s → x' = x * d → y' = y * d → d = 1
@@ -78,13 +79,24 @@ by
     infer_instance
 
 @[to_additive]
-instance (s : Finset (α × α)) [DecidableEq α] : Decidable (MulCornerFree (s : Set (α × α))) :=
+instance instMulT (s : Finset (α × α)) [DecidableEq α] :
+    Decidable (MulCornerFree s.toSet) :=
   decidable_of_iff
     (MulCornerFree' (s : Set (α × α)))
     (MulCornerFree_iff_MulCornerFree' (s : Set (α × α))).symm
 
-@[to_additive "also poggers"]
-noncomputable def mulCornerFreeNumber (s : Finset (α × α)) : ℕ :=
-  Nat.findGreatest (fun m => ∃ (t : _) (_ : t ⊆ s), t.card = m ∧ MulCornerFree (t : Set (α × α))) s.card
+end
+
+variable {α : Type*}
+
+def mulCornerFreeNumber [CommGroup α] (s : Finset (α × α)) [DecidableEq α] : ℕ :=
+  Nat.findGreatest (fun m => ∃ t ⊆ s, t.card = m ∧ MulCornerFree t.toSet) s.card
+
+def addCornerFreeNumber [AddCommGroup α] (s : Finset (α × α)) [DecidableEq α] : ℕ :=
+  Nat.findGreatest (fun m => ∃ t ⊆ s, t.card = m ∧ AddCornerFree t.toSet) s.card
+
+def ss : Finset (ℤ × ℤ) := Finset.Icc 1 3 ×ˢ Finset.Icc 1 3
+#eval Nat.findGreatest (fun m ↦ ∃ t ⊆ ss, t.card = m ∧ AddCornerFree t.toSet) 100
+#eval addCornerFreeNumber ss
 
 end BenGreen
